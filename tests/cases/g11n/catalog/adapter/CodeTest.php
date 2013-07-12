@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -174,14 +174,11 @@ EOD;
 		$expectedLR = "escaping\n\t4";
 		$expectedCRLF = "escaping\r\n\t4";
 
-		$assertLR = (
-			isset($results["escaping\n\t4"]['ids']['singular']) &&
-			$results["escaping\n\t4"]['ids']['singular'] === $expectedLR
-		);
-		$assertCRLF = (
-			isset($results["escaping\r\n\t4"]['ids']['singular']) &&
-			$results["escaping\r\n\t4"]['ids']['singular'] === $expectedCRLF
-		);
+		$isSet = isset($results["escaping\n\t4"]['ids']['singular']);
+		$assertLR = $isSet && $results["escaping\n\t4"]['ids']['singular'] === $expectedLR;
+
+		$isSet = isset($results["escaping\r\n\t4"]['ids']['singular']);
+		$assertCRLF = $isSet && $results["escaping\r\n\t4"]['ids']['singular'] === $expectedCRLF;
 		$this->assertTrue($assertLR || $assertCRLF);
 	}
 
@@ -241,7 +238,7 @@ EOD;
 		$this->adapter = new Code(array('path' => $this->_path, 'scope' => 'li3_bot'));
 
 		$results = $this->adapter->read('messageTemplate', 'root', null);
-		$this->assertFalse($results);
+		$this->assertEmpty($results);
 
 		$results = $this->adapter->read('messageTemplate', 'root', 'li3_bot');
 		$expected = array('singular' => 'simple 1');
@@ -251,7 +248,7 @@ EOD;
 
 	public function testNoReadSupportForOtherCategories() {
 		$result = $this->adapter->read('message', 'de', null);
-		$this->assertFalse($result);
+		$this->assertEmpty($result);
 	}
 }
 

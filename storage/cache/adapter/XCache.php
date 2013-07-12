@@ -2,11 +2,13 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\storage\cache\adapter;
+
+use Closure;
 
 /**
  * An XCache opcode cache adapter implementation.
@@ -62,7 +64,7 @@ class XCache extends \lithium\core\Object {
 	 * @param mixed $data The value to be cached
 	 * @param null|string $expiry A strtotime() compatible cache time. If no expiry time is set,
 	 *        then the default cache expiration time set with the cache configuration will be used.
-	 * @return closure Function returning boolean `true` on successful write, `false` otherwise.
+	 * @return Closure Function returning boolean `true` on successful write, `false` otherwise.
 	 */
 	public function write($key, $data, $expiry = null) {
 		$expiry = ($expiry) ?: $this->_config['expiry'];
@@ -76,7 +78,7 @@ class XCache extends \lithium\core\Object {
 	 * Read value(s) from the cache
 	 *
 	 * @param string $key The key to uniquely identify the cached item
-	 * @return closure Function returning cached value if successful, `false` otherwise
+	 * @return Closure Function returning cached value if successful, `false` otherwise
 	 */
 	public function read($key) {
 		return function($self, $params) {
@@ -88,7 +90,7 @@ class XCache extends \lithium\core\Object {
 	 * Delete value from the cache
 	 *
 	 * @param string $key The key to uniquely identify the cached item
-	 * @return closure Function returning boolean `true` on successful delete, `false` otherwise
+	 * @return Closure Function returning boolean `true` on successful delete, `false` otherwise
 	 */
 	public function delete($key) {
 		return function($self, $params) {
@@ -105,7 +107,7 @@ class XCache extends \lithium\core\Object {
 	 *
 	 * @param string $key Key of numeric cache item to decrement
 	 * @param integer $offset Offset to decrement - defaults to 1.
-	 * @return closure Function returning item's new value on successful decrement, else `false`
+	 * @return Closure Function returning item's new value on successful decrement, else `false`
 	 */
 	public function decrement($key, $offset = 1) {
 		return function($self, $params) use ($offset) {
@@ -121,7 +123,7 @@ class XCache extends \lithium\core\Object {
 	 *
 	 * @param string $key Key of numeric cache item to increment
 	 * @param integer $offset Offset to increment - defaults to 1.
-	 * @return closure Function returning item's new value on successful increment, else `false`
+	 * @return Closure Function returning item's new value on successful increment, else `false`
 	 */
 	public function increment($key, $offset = 1) {
 		return function($self, $params) use ($offset) {
@@ -129,7 +131,6 @@ class XCache extends \lithium\core\Object {
 			return xcache_inc($params['key'], $offset);
 		};
 	}
-
 
 	/**
 	 * Clears user-space cache.
@@ -165,12 +166,10 @@ class XCache extends \lithium\core\Object {
 		}
 
 		if (isset($_SERVER['PHP_AUTH_USER'])) {
-			$_SERVER['PHP_AUTH_USER'] =
-				($credentials['username'] !== null) ? $credentials['username'] : null;
+			$_SERVER['PHP_AUTH_USER'] = $credentials['username'];
 		}
 		if (isset($_SERVER['PHP_AUTH_PW'])) {
-			$_SERVER['PHP_AUTH_PW'] =
-				($credentials['password'] !== null) ? $credentials['password'] : null;
+			$_SERVER['PHP_AUTH_PW'] = $credentials['password'];
 		}
 		return true;
 	}
@@ -179,8 +178,7 @@ class XCache extends \lithium\core\Object {
 	 * Determines if the XCache extension has been installed and
 	 * if the userspace cache is available.
 	 *
-	 * return boolean True if enabled, false otherwise
-	 * @return boolean
+	 * @return boolean True if enabled, false otherwise.
 	 */
 	public static function enabled() {
 		return extension_loaded('xcache');

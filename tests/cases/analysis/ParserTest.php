@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -54,7 +54,7 @@ class ParserTest extends \lithium\test\Unit {
 
 	public function testFullTokenization() {
 		$result = Parser::tokenize('$foo = function() {};');
-		$this->assertEqual(11, count($result));
+		$this->assertCount(11, $result);
 
 		$expected = array(
 			'id' => T_VARIABLE,
@@ -70,7 +70,7 @@ class ParserTest extends \lithium\test\Unit {
 		$code = '$defaults = array("id" => "foo", "name" => "bar", \'count\' => 5);';
 		$result = Parser::tokenize($code);
 
-		$this->assertEqual(27, count($result));
+		$this->assertCount(27, $result);
 		$this->assertEqual('T_VARIABLE', $result[0]['name']);
 		$this->assertEqual('$defaults', $result[0]['content']);
 	}
@@ -151,6 +151,17 @@ EOD;
 		$tokens = Parser::tokenize($code);
 		$this->assertIdentical('}', $tokens[13]['content']);
 		$this->assertIdentical(3, $tokens[13]['line']);
+	}
+
+	public function testParserGuessesLineBleedWithNonWhitespace() {
+		$code = <<<EOD
+if (false) {
+	// hello world
+}
+EOD;
+		$tokens = Parser::tokenize($code);
+		$this->assertIdentical('}', $tokens[9]['content']);
+		$this->assertIdentical(3, $tokens[9]['line']);
 	}
 
 }

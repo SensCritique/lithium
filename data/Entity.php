@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -11,6 +11,7 @@ namespace lithium\data;
 use BadMethodCallException;
 use UnexpectedValueException;
 use lithium\data\Collection;
+use lithium\analysis\Inspector;
 
 /**
  * `Entity` is a smart data object which represents data such as a row or document in a
@@ -105,13 +106,30 @@ class Entity extends \lithium\core\Object {
 	protected $_schema = array();
 
 	/**
+	 * Hold the "data export" handlers where the keys are fully-namespaced class
+	 * names, and the values are closures that take an instance of the class as a
+	 * parameter, and return an array or scalar value that the instance represents.
+	 *
+	 * @see lithium\data\Entity::to()
+	 * @var array
+	 */
+	protected $_handlers = array();
+
+	/**
 	 * Auto configuration.
 	 *
 	 * @var array
 	 */
 	protected $_autoConfig = array(
-		'classes' => 'merge', 'parent', 'schema', 'data',
-		'model', 'exists', 'pathKey', 'relationships'
+		'classes' => 'merge',
+		'parent',
+		'schema',
+		'data',
+		'model',
+		'exists',
+		'pathKey',
+		'relationships',
+		'handlers'
 	);
 
 	/**
@@ -187,13 +205,34 @@ class Entity extends \lithium\core\Object {
 	 * @return mixed
 	 */
 	public function __call($method, $params) {
-		if ($model = $this->_model) {
+		if (($model = $this->_model) && method_exists($model, '_object')) {
 			array_unshift($params, $this);
 			$class = $model::invokeMethod('_object');
 			return call_user_func_array(array(&$class, $method), $params);
 		}
 		$message = "No model bound to call `{$method}`.";
 		throw new BadMethodCallException($message);
+	}
+
+	/**
+	 * Custom check to determine if our given magic methods can be responded to.
+	 *
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
+	 */
+	public function respondsTo($method, $internal = false) {
+		$class = $this->_model;
+		$modelRespondsTo = false;
+		$parentRespondsTo = parent::respondsTo($method, $internal);
+		$staticRespondsTo = $class::respondsTo($method, $internal);
+		if (method_exists($class, '_object')) {
+			$model = $class::invokeMethod('_object');
+			$modelRespondsTo = $model->respondsTo($method);
+		} else {
+			$modelRespondsTo = Inspector::isCallable($class, $method, $internal);
+		}
+		return $parentRespondsTo || $staticRespondsTo || $modelRespondsTo;
 	}
 
 	/**
@@ -255,23 +294,32 @@ class Entity extends \lithium\core\Object {
 	 * Access the errors of the record.
 	 *
 	 * @see lithium\data\Entity::$_errors
-	 * @param array|string $field If an array, overwrites `$this->_errors`. If a string, and
-	 *        `$value` is not `null`, sets the corresponding key in `$this->_errors` to `$value`.
+	 * @param array|string $field If an array, overwrites `$this->_errors` if it is empty,
+	 *        if not, merges the errors with the current values. If a string, and `$value`
+	 *        is not `null`, sets the corresponding key in `$this->_errors` to `$value`.
+	 *        Setting `$field` to `false` will reset the current state.
 	 * @param string $value Value to set.
 	 * @return mixed Either the `$this->_errors` array, or single value from it.
 	 */
 	public function errors($field = null, $value = null) {
+		if ($field === false) {
+			return ($this->_errors = array());
+		}
 		if ($field === null) {
 			return $this->_errors;
 		}
 		if (is_array($field)) {
-			return ($this->_errors = $field);
+			return ($this->_errors = array_merge_recursive($this->_errors, $field));
 		}
 		if ($value === null && isset($this->_errors[$field])) {
 			return $this->_errors[$field];
 		}
 		if ($value !== null) {
-			return $this->_errors[$field] = $value;
+			if (array_key_exists($field, $this->_errors)) {
+				$current = $this->_errors[$field];
+				return ($this->_errors[$field] = array_merge((array) $current, (array) $value));
+			}
+			return ($this->_errors[$field] = $value);
 		}
 		return $value;
 	}
@@ -296,11 +344,10 @@ class Entity extends \lithium\core\Object {
 	 * @param mixed $id The ID to assign, where applicable.
 	 * @param array $data Any additional generated data assigned to the object by the database.
 	 * @param array $options Method options:
-	 *              - `'materialize'` _boolean_: Determines whether or not the flag should be set
-	 *                that indicates that this entity exists in the data store. Defaults to `true`.
-	 *              - `'dematerialize'` _boolean_: If set to `true`, indicates that this entity has
-	 *                been deleted from the data store and no longer exists. Defaults to `false`.
-	 * @return void
+	 *        - `'materialize'` _boolean_: Determines whether or not the flag should be set
+	 *          that indicates that this entity exists in the data store. Defaults to `true`.
+	 *        - `'dematerialize'` _boolean_: If set to `true`, indicates that this entity has
+	 *          been deleted from the data store and no longer exists. Defaults to `false`.
 	 */
 	public function sync($id = null, array $data = array(), array $options = array()) {
 		$defaults = array('materialize' => true, 'dematerialize' => false);
@@ -328,7 +375,7 @@ class Entity extends \lithium\core\Object {
 	 *
 	 * @param string $field The name of the field to be incremented.
 	 * @param string $value The value to increment the field by. Defaults to `1` if this parameter
-	 *               is not specified.
+	 *        is not specified.
 	 * @return integer Returns the current value of `$field`, based on the value retrieved from the
 	 *         data source when the entity was loaded, plus any increments applied. Note that it may
 	 *         not reflect the most current value in the persistent backend data source.
@@ -364,8 +411,9 @@ class Entity extends \lithium\core\Object {
 	 *
 	 * @param string The field name to check its state.
 	 * @return mixed Returns `true` if a field is given and was updated, `false` otherwise and
-	 *		   `null` if the field was not set at all. If no field is given returns an arra
-	 *		   where the keys are entity field names, and the values are `true` for changed fields.
+	 *         `null` if the field was not set at all. If no field is given returns an arra
+	 *         where the keys are entity field names, and the values are `true` for changed
+	 *         fields.
 	 */
 	public function modified($field = null) {
 		if ($field) {
@@ -373,14 +421,18 @@ class Entity extends \lithium\core\Object {
 				return null;
 			}
 
-			$value = !($value = isset($this->_updated[$field])) ?: $this->_updated[$field];
-			if (!$value) {
+			if (!array_key_exists($field, $this->_updated)) {
 				return false;
-			} elseif (is_object($value) && method_exists($value, 'modified')) {
+			}
+
+			$value = $this->_updated[$field];
+			if (is_object($value) && method_exists($value, 'modified')) {
 				$modified = $value->modified();
 				return $modified === true || is_array($modified) && in_array(true, $modified, true);
 			}
-			return !isset($this->_data[$field]) || $this->_data[$field] !== $this->_updated[$field];
+
+			$isSet = isset($this->_data[$field]);
+			return !$isSet || ($this->_data[$field] !== $this->_updated[$field]);
 		}
 
 		$fields = array_fill_keys(array_keys($this->_data), false);
@@ -398,8 +450,7 @@ class Entity extends \lithium\core\Object {
 				);
 			} else {
 				$fields[$field] = (
-					!isset($fields[$field]) ||
-					$this->_data[$field] !== $this->_updated[$field]
+					!isset($fields[$field]) || $this->_data[$field] !== $this->_updated[$field]
 				);
 			}
 		}
@@ -420,7 +471,6 @@ class Entity extends \lithium\core\Object {
 	 *
 	 * @param object $parent
 	 * @param array $config
-	 * @return void
 	 */
 	public function assignTo($parent, array $config = array()) {
 		foreach ($config as $key => $val) {
@@ -437,11 +487,16 @@ class Entity extends \lithium\core\Object {
 	 * @return mixed
 	 */
 	public function to($format, array $options = array()) {
+		$defaults = array('handlers' => array());
+		$options += $defaults;
+
+		$options['handlers'] += $this->_handlers;
 		switch ($format) {
 			case 'array':
 				$data = $this->_updated;
 				$rel = array_map(function($obj) { return $obj->data(); }, $this->_relationships);
 				$data = $rel + $data;
+				$options['indexed'] = isset($options['indexed']) ? $options['indexed'] : false;
 				$result = Collection::toArray($data, $options);
 			break;
 			case 'string':

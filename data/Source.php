@@ -2,13 +2,14 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data;
 
 use lithium\core\NetworkException;
+use lithium\util\Inflector;
 
 /**
  * This is the base class for Lithium's data abstraction layer.
@@ -223,26 +224,6 @@ abstract class Source extends \lithium\core\Object {
 	abstract public function delete($query, array $options = array());
 
 	/**
-	 * Casts data into proper format when added to a collection or entity object.
-	 *
-	 * @param mixed $entity The entity or collection for which data is being cast, or the name of
-	 *              the model class to which the entity/collection is bound.
-	 * @param array $data An array of data being assigned.
-	 * @param array $options Any associated options with, for example, instantiating new objects in
-	 *              which to wrap the data. Options implemented by `cast()` itself:
-	 *              - `first` _boolean_: Used when only one value is passed to `cast()`. Even though
-	 *                that value must be wrapped in an array, setting the `'first'` option to `true`
-	 *                causes only that one value to be returned.
-	 * @return mixed Returns the value of `$data`, cast to the proper format according to the schema
-	 *         definition of the model class specified by `$model`.
-	 */
-	public function cast($entity, array $data, array $options = array()) {
-		$defaults = array('first' => false);
-		$options += $defaults;
-		return $options['first'] ? reset($data) : $data;
-	}
-
-	/**
 	 * Returns the list of methods which format values imported from `Query` objects. Should be
 	 * overridden in subclasses.
 	 *
@@ -266,27 +247,10 @@ abstract class Source extends \lithium\core\Object {
 	 *         dependencies.
 	 */
 	public function configureClass($class) {
-		return array('meta' => array('key' => 'id', 'locked' => true));
-	}
-
-	/**
-	 * This method is responsible for factorying a new instance of a single entity object of correct
-	 * type, matching the current data source class.
-	 *
-	 * @param string $model A fully-namespaced class name representing the model class to which the
-	 *               `Entity` object will be bound.
-	 * @param array $data The default data with which the new `Entity` should be populated.
-	 * @param array $options Any additional options to pass to the `Entity`'s constructor
-	 * @return object Returns a new, un-saved `Entity` object bound to the model class specified
-	 *         in `$model`.
-	 */
-	public function item($model, array $data = array(), array $options = array()) {
-		$defaults = array('class' => 'entity');
-		$options += $defaults;
-
-		$class = $options['class'];
-		unset($options['class']);
-		return $this->_instance($class, compact('model', 'data') + $options);
+		return array(
+			'classes' => $this->_classes,
+			'meta' => array('key' => 'id', 'locked' => true)
+		);
 	}
 
 	/**
@@ -296,6 +260,35 @@ abstract class Source extends \lithium\core\Object {
 	 * @param object $context A query object to configure
 	 */
 	public function applyStrategy($options, $context) {}
+
+	/**
+	 * With no parameter, checks a specific supported feature.
+	 *
+	 * @param string $feature Test for support for a specific feature, i.e. `"transactions"` or
+	 *        `"arrays"`.
+	 * @return boolean Returns `true` if the particular feature (or if MongoDB) support is enabled,
+	 *         otherwise `false`.
+	 */
+	public static function enabled($feature = null) {
+		return false;
+	}
+
+	/**
+	 * Returns the field name of a relation name (underscore).
+	 *
+	 * @param string The type of the relation.
+	 * @param string The name of the relation.
+	 * @return string
+	 */
+	public function relationFieldName($type, $name) {
+		$fieldName = Inflector::underscore($name);
+		if (preg_match('/Many$/', $type)) {
+			$fieldName = Inflector::pluralize($fieldName);
+		} else {
+			$fieldName = Inflector::singularize($fieldName);
+		}
+		return $fieldName;
+	}
 }
 
 ?>

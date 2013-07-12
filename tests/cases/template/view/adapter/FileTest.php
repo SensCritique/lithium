@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -43,7 +43,7 @@ class FileTest extends \lithium\test\Unit {
 		$file = new File(array('extract' => false));
 		$this->expectException('Undefined variable: foo');
 		$content = $file->render("{$this->_path}/template1.html.php", array('foo' => 'bar'));
-		$this->assertFalse($content);
+		$this->assertEmpty($content);
 
 		$content = $file->render("{$this->_path}/template2.html.php", array('foo' => 'bar'));
 		$this->assertEqual('bar', $content);

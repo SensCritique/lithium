@@ -27,7 +27,7 @@ class View extends \lithium\console\command\Create {
 	 * @return string
 	 */
 	protected function _name($request) {
-		return Inflector::camelize(Inflector::pluralize($request->action));
+		return Inflector::camelize($request->action);
 	}
 
 	/**
@@ -77,7 +77,7 @@ class View extends \lithium\console\command\Create {
 			if (file_exists($file)) {
 				$prompt = "{$file} already exists. Overwrite?";
 				$choices = array('y', 'n');
-				if ($this->in($prompt, compact('choices')) != 'y') {
+				if ($this->in($prompt, compact('choices')) !== 'y') {
 					return "{$params['file']} skipped.";
 				}
 			}

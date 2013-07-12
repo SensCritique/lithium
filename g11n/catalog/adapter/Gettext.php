@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -10,6 +10,7 @@ namespace lithium\g11n\catalog\adapter;
 
 use RangeException;
 use lithium\core\ConfigException;
+use lithium\core\Libraries;
 
 /**
  * The `Gettext` class is an adapter for reading and writing PO and MO files without the
@@ -123,7 +124,7 @@ class Gettext extends \lithium\g11n\catalog\Adapter {
 				$data['pluralRule'] = array(
 					'id' => 'pluralRule',
 					'translated' => function($count) {
-						return $count != 1;
+						return $count !== 1;
 					}
 				);
 				return $data;
@@ -172,7 +173,7 @@ class Gettext extends \lithium\g11n\catalog\Adapter {
 			return array("{$path}/{$category}_{$scope}.pot");
 		}
 
-		if ($category == 'message') {
+		if ($category === 'message') {
 			$category = 'messages';
 		}
 		$category = strtoupper($category);
@@ -472,9 +473,10 @@ class Gettext extends \lithium\g11n\catalog\Adapter {
 		if (!isset($item['ids']['singular'])) {
 			$item['ids']['singular'] = $item['id'];
 		}
+		$path = Libraries::get(true, 'path');
 		if (isset($item['occurrences'])) {
 			foreach ($item['occurrences'] as &$occurrence) {
-				$occurrence['file'] = str_replace(LITHIUM_APP_PATH, '', $occurrence['file']);
+				$occurrence['file'] = str_replace($path, '', $occurrence['file']);
 			}
 		}
 		return parent::_prepareForWrite($item);

@@ -2,16 +2,16 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\analysis;
 
-use ReflectionMethod;
 use lithium\analysis\Inspector;
 use lithium\core\Libraries;
 use lithium\tests\mocks\analysis\MockEmptyClass;
+use lithium\tests\mocks\core\MockMethodFiltering;
 
 class InspectorTest extends \lithium\test\Unit {
 
@@ -23,11 +23,9 @@ class InspectorTest extends \lithium\test\Unit {
 
 	/**
 	 * Tests that basic method lists and information are queried properly.
-	 *
-	 * @return void
 	 */
 	public function testBasicMethodInspection() {
-		$class = 'lithium\analysis\Inspector';
+		$class = 'lithium\analysis\Debugger';
 		$parent = 'lithium\core\StaticObject';
 
 		$expected = array_diff(get_class_methods($class), get_class_methods($parent));
@@ -47,7 +45,7 @@ class InspectorTest extends \lithium\test\Unit {
 
 	public function testMethodInspection() {
 		$result = Inspector::methods($this, null);
-		$this->assertTrue($result[0] instanceof ReflectionMethod);
+		$this->assertInstanceOf('ReflectionMethod', $result[0]);
 
 		$result = Inspector::info('lithium\core\Object::_init()');
 		$expected = '_init';
@@ -60,8 +58,6 @@ class InspectorTest extends \lithium\test\Unit {
 	/**
 	 * Tests that the range of executable lines of this test method is properly calculated.
 	 * Recursively meta.
-	 *
-	 * @return void
 	 */
 	public function testMethodRange() {
 		$result = Inspector::methods(__CLASS__, 'ranges', array('methods' => __FUNCTION__));
@@ -72,8 +68,6 @@ class InspectorTest extends \lithium\test\Unit {
 	/**
 	 * Gets the executable line numbers of this file based on a manual entry of line ranges. Will
 	 * need to be updated manually if this method changes.
-	 *
-	 * @return void
 	 */
 	public function testExecutableLines() {
 		do {
@@ -164,7 +158,7 @@ class InspectorTest extends \lithium\test\Unit {
 		$this->assertEqual(array(__CLASS__ => __FILE__), $result);
 
 		$result = Inspector::classes(array('file' => __FILE__, 'group' => 'files'));
-		$this->assertEqual(1, count($result));
+		$this->assertCount(1, $result);
 		$this->assertEqual(__FILE__, key($result));
 
 		$result = Inspector::classes(array('file' => __FILE__, 'group' => 'foo'));
@@ -206,7 +200,7 @@ class InspectorTest extends \lithium\test\Unit {
 
 		$info = Inspector::info('\lithium\analysis\Inspector');
 		$result = str_replace('\\', '/', $info['file']);
-		$this->assertTrue(strpos($result, '/analysis/Inspector.php'));
+		$this->assertNotEmpty(strpos($result, '/analysis/Inspector.php'));
 		$this->assertEqual('lithium\analysis', $info['namespace']);
 		$this->assertEqual('Inspector', $info['shortName']);
 
@@ -314,6 +308,78 @@ class InspectorTest extends \lithium\test\Unit {
 
 		$this->assertNull(Inspector::properties('\lithium\core\Foo'));
 	}
+
+	public function testCallableObjectWithBadMethods() {
+		$stdObj = new MockEmptyClass;
+		$this->assertFalse(Inspector::isCallable($stdObj, 'foo', 0));
+		$this->assertFalse(Inspector::isCallable($stdObj, 'bar', 0));
+		$this->assertFalse(Inspector::isCallable($stdObj, 'baz', 0));
+	}
+
+	public function testCallableClassWithBadMethods() {
+		$this->assertFalse(Inspector::isCallable('lithium\action\Dispatcher', 'foo', 0));
+		$this->assertFalse(Inspector::isCallable('lithium\action\Dispatcher', 'bar', 0));
+		$this->assertFalse(Inspector::isCallable('lithium\action\Dispatcher', 'baz', 0));
+	}
+
+	public function testCallableObjectWithRealMethods() {
+		$obj = new MockMethodFiltering();
+		$this->assertTrue(Inspector::isCallable($obj, 'method', 0));
+		$this->assertTrue(Inspector::isCallable($obj, 'method2', 0));
+		$this->assertTrue(Inspector::isCallable($obj, 'manual', 0));
+	}
+
+	public function testCallableClassWithRealMethods() {
+		$this->assertTrue(Inspector::isCallable('lithium\action\Dispatcher', 'config', 0));
+		$this->assertTrue(Inspector::isCallable('lithium\action\Dispatcher', 'run', 0));
+		$this->assertTrue(Inspector::isCallable('lithium\action\Dispatcher', 'applyRules', 0));
+	}
+
+	public function testCallableVisibility() {
+		$obj = new MockMethodFiltering();
+		$this->assertTrue(Inspector::isCallable($obj, 'method', 0));
+		$this->assertTrue(Inspector::isCallable($obj, 'method', 1));
+		$this->assertFalse(Inspector::isCallable('lithium\action\Dispatcher', '_callable', 0));
+		$this->assertTrue(Inspector::isCallable('lithium\action\Dispatcher', '_callable', 1));
+	}
+
+	/**
+	 * Tests that the correct parameters are always passed in `Inspector::invokeMethod()`,
+	 * regardless of the number.
+	 *
+	 * @return void
+	 */
+	public function testMethodInvocationWithParameters() {
+		$class = 'lithium\tests\mocks\analysis\MockInspector';
+
+		$this->assertEqual($class::invokeMethod('foo'), array());
+		$this->assertEqual($class::invokeMethod('foo', array('bar')), array('bar'));
+
+		$params = array('one', 'two');
+		$this->assertEqual($class::invokeMethod('foo', $params), $params);
+
+		$params = array('short', 'parameter', 'list');
+		$this->assertEqual($class::invokeMethod('foo', $params), $params);
+
+		$params = array('a', 'longer', 'parameter', 'list');
+		$this->assertEqual($class::invokeMethod('foo', $params), $params);
+
+		$params = array('a', 'much', 'longer', 'parameter', 'list');
+		$this->assertEqual($class::invokeMethod('foo', $params), $params);
+
+		$params = array('an', 'extremely', 'long', 'list', 'of', 'parameters');
+		$this->assertEqual($class::invokeMethod('foo', $params), $params);
+
+		$params = array('an', 'extremely', 'long', 'list', 'of', 'parameters');
+		$this->assertEqual($class::invokeMethod('foo', $params), $params);
+
+		$params = array(
+			'if', 'you', 'have', 'a', 'parameter', 'list', 'this',
+			'long', 'then', 'UR', 'DOIN', 'IT', 'RONG'
+		);
+		$this->assertEqual($class::invokeMethod('foo', $params), $params);
+	}
+
 }
 
 ?>

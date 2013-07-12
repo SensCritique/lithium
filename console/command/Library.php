@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -202,7 +202,7 @@ class Library extends \lithium\console\Command {
 	 *       location
 	 *
 	 * @param string $name if only param, command/create/template/app.phar.gz extracted to $name
-	 *     otherwise, the template name or full path to extract `from` phar.gz.
+	 *        otherwise, the template name or full path to extract `from` phar.gz.
 	 * @param string $result if exists $name is extracted to $result
 	 * @return boolean
 	 */
@@ -262,9 +262,9 @@ class Library extends \lithium\console\Command {
 	 *
 	 * @param string $base File path to the extracted library
 	 * @return array A multi-dimensional array.  Keys on the top level
-	 *     are filenames or glob-style paths.  Those hold an array
-	 *     with keys being the search param and values being the
-	 *     replacement values
+	 *         are filenames or glob-style paths.  Those hold an array
+	 *         with keys being the search param and values being the
+	 *         replacement values
 	 */
 	protected function _findReplacements($base = null) {
 		$replacements = null;
@@ -288,17 +288,17 @@ class Library extends \lithium\console\Command {
 	 *
 	 * @param string $extracted contains the path to the extracted archive.
 	 * @param array $options Valid options are:
-	 *     - `'replacements'`: an array of string replacements indexed by filename.
-	 *       It's also possible to use glob-style wildcards in the filename such
-	 *       as `*` or `*.php` or `resources/g11n/*`.  If the filename starts
-	 *       with `*`, then that filename pattern will be recursively found
-	 *       in every sub-directory.  Additionally, each replacement can
-	 *       use `String::insert()` style strings that will be replaced
-	 *       with the data in the `data` option.
-	 *     - `'data'`: an array with data that will be used to replace
-	 *       `String::insert`-style placeholders in the `replacements` option.
-	 *       By default, this includes 'namespace' and 'library' which are
-	 *       both set to the extracted library's namespace.
+	 *        - `'replacements'`: an array of string replacements indexed by filename.
+	 *          It's also possible to use glob-style wildcards in the filename such
+	 *          as `*` or `*.php` or `resources/g11n/*`.  If the filename starts
+	 *          with `*`, then that filename pattern will be recursively found
+	 *          in every sub-directory.  Additionally, each replacement can
+	 *          use `String::insert()` style strings that will be replaced
+	 *          with the data in the `data` option.
+	 *        - `'data'`: an array with data that will be used to replace
+	 *          `String::insert`-style placeholders in the `replacements` option.
+	 *          By default, this includes 'namespace' and 'library' which are
+	 *          both set to the extracted library's namespace.
 	 * @return boolean
 	 */
 	protected function _replaceAfterExtract($extracted, $options = array()) {
@@ -321,7 +321,7 @@ class Library extends \lithium\console\Command {
 
 		if (dirname(LITHIUM_APP_PATH) . '/libraries' !== $this->lithiumLibraryPath) {
 			$pathinfo = pathinfo($this->lithiumLibraryPath);
-			if ($pathinfo['dirname'] != '.') {
+			if ($pathinfo['dirname'] !== '.') {
 				$this->lithiumLibraryPath = "'" . $this->lithiumLibraryPath . "'";
 			}
 
@@ -379,7 +379,7 @@ class Library extends \lithium\console\Command {
 	 */
 	protected function _wildcardPaths($path, $base = '') {
 		if (strpos($path, '*') === false) {
-			return array($base .  '/' . $path);
+			return array($base . '/' . $path);
 		}
 		if ($path[0] === '*') {
 			$paths = array();
@@ -395,7 +395,7 @@ class Library extends \lithium\console\Command {
 				);
 			}
 		} else {
-			$paths = array_filter(glob($base .  '/' . $path), function($path) {
+			$paths = array_filter(glob($base . '/' . $path), function($path) {
 				$basename = basename($path);
 				return $basename !== '.' && $basename !== '..';
 			});
@@ -413,12 +413,12 @@ class Library extends \lithium\console\Command {
 	 * - `li3 library archive myapp my_archive` : archives 'myapp' to 'my_archive.phar.gz'
 	 *
 	 * @param string $name if only param, the archive name for the current working directory
-	 *     otherwise, The library name or path to the directory to compress.
+	 *        otherwise, The library name or path to the directory to compress.
 	 * @param string $result if exists, The name of the resulting archive
 	 * @return boolean
 	 */
 	public function archive($name = null, $result = null) {
-		if (ini_get('phar.readonly') == '1') {
+		if (ini_get('phar.readonly') === '1') {
 			throw new RuntimeException('Set `phar.readonly` to `0` in `php.ini`.');
 		}
 		$from = $name;
@@ -438,7 +438,7 @@ class Library extends \lithium\console\Command {
 			Phar::unlinkArchive("{$path}.phar");
 		}
 		try {
-	 		$archive = new Phar("{$path}.phar");
+			$archive = new Phar("{$path}.phar");
 		} catch (Exception $e) {
 			$this->error($e->getMessage());
 			return false;
@@ -465,18 +465,18 @@ class Library extends \lithium\console\Command {
 		return false;
 	}
 
-
 	/**
 	 * List all the plugins and extensions available on the server.
 	 *
 	 * @param string $type plugins|extensions
-	 * @return void
 	 */
 	public function find($type = 'plugins') {
 		$results = array();
 
 		foreach ($this->_settings['servers'] as $server => $enabled) {
-			if (!$enabled) { continue; }
+			if (!$enabled) {
+				continue;
+			}
 			$service = $this->_instance('service', array(
 				'host' => $server, 'port' => $this->port
 			));
@@ -552,7 +552,7 @@ class Library extends \lithium\console\Command {
 			}
 			$url = parse_url($source);
 
-			if (!empty($url['scheme']) && $url['scheme'] == 'git' && $hasGit()) {
+			if (!empty($url['scheme']) && $url['scheme'] === 'git' && $hasGit()) {
 				$cmd = "cd {$this->path} && git clone --quiet {$source} {$plugin->name}";
 				$result = shell_exec($cmd);
 
@@ -643,8 +643,8 @@ class Library extends \lithium\console\Command {
 		}
 		$formula = json_decode(file_get_contents("phar://{$file}/config/{$name}.json"));
 		$isValid = (
-			!empty($formula->name) && !empty($formula->version)
-			&& !empty($formula->summary) && !empty($formula->sources)
+			!empty($formula->name) && !empty($formula->version) &&
+			!empty($formula->summary) && !empty($formula->sources)
 		);
 		if (!$isValid) {
 			$this->error(array(
@@ -710,7 +710,7 @@ class Library extends \lithium\console\Command {
 	 */
 	protected function _toPath($name = null) {
 		$pathinfo = pathinfo($name);
-		if ($name && $pathinfo['dirname'] != '.') {
+		if ($name && $pathinfo['dirname'] !== '.') {
 			return $name;
 		}
 

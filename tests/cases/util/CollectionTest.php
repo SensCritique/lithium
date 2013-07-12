@@ -2,13 +2,14 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\util;
 
 use stdClass;
+use lithium\data\Entity;
 use lithium\util\Collection;
 use lithium\tests\mocks\util\MockCollectionMarker;
 use lithium\tests\mocks\util\MockCollectionObject;
@@ -57,7 +58,7 @@ class CollectionTest extends \lithium\test\Unit {
 		$this->assertEqual($result, array_fill(0, 10, 'testFoo'));
 
 		$result = $collection->invoke('testFoo', array(), array('collect' => true));
-		$this->assertTrue($result instanceof Collection);
+		$this->assertInstanceOf('lithium\util\Collection', $result);
 		$this->assertEqual($result->to('array'), array_fill(0, 10, 'testFoo'));
 	}
 
@@ -94,11 +95,11 @@ class CollectionTest extends \lithium\test\Unit {
 			array_fill(0, 10, 1),
 			array_fill(0, 10, 2)
 		)));
-		$this->assertEqual(20, count($collection->to('array')));
+		$this->assertCount(20, $collection->to('array'));
 
-		$filter = function($item) { return $item == 1; };
+		$filter = function($item) { return $item === 1; };
 		$result = $collection->find($filter);
-		$this->assertTrue($result instanceof Collection);
+		$this->assertInstanceOf('lithium\util\Collection', $result);
 		$this->assertEqual(array_fill(0, 10, 1), $result->to('array'));
 
 		$result = $collection->find($filter, array('collect' => false));
@@ -251,12 +252,12 @@ class CollectionTest extends \lithium\test\Unit {
 	public function testValueAppend() {
 		$collection = new Collection();
 		$this->assertFalse($collection->valid());
-		$this->assertEqual(0, count($collection));
+		$this->assertCount(0, $collection);
 
 		$collection->append(1);
-		$this->assertEqual(1, count($collection));
+		$this->assertCount(1, $collection);
 		$collection->append(new stdClass());
-		$this->assertEqual(2, count($collection));
+		$this->assertCount(2, $collection);
 
 		$this->assertEqual(1, $collection->current());
 		$this->assertEqual(new stdClass(), $collection->next());
@@ -346,7 +347,7 @@ class CollectionTest extends \lithium\test\Unit {
 
 		$collection = new Collection(array('data' => array(5,3,4,1,2)));
 		$collection->sort(function ($a,$b) {
-			if ($a == $b) {
+			if ($a === $b) {
 				return 0;
 			}
 			return ($b > $a ? 1 : -1);
@@ -367,7 +368,7 @@ class CollectionTest extends \lithium\test\Unit {
 
 		$cpt = 0;
 		foreach ($collection as $i => $word) {
-			if ($word == 'Delete me') {
+			if ($word === 'Delete me') {
 				unset($collection[$i]);
 			}
 			$cpt++;
@@ -390,7 +391,7 @@ class CollectionTest extends \lithium\test\Unit {
 		$this->assertIdentical($data, $collection->to('array'));
 
 		foreach ($collection as $i => $word) {
-			if ($word == 'Delete me') {
+			if ($word === 'Delete me') {
 				unset($collection[$i]);
 			}
 		}
@@ -413,7 +414,7 @@ class CollectionTest extends \lithium\test\Unit {
 		$this->assertIdentical($data, $collection->to('array'));
 
 		foreach ($collection as $i => $word) {
-			if ($word == 'Delete me') {
+			if ($word === 'Delete me') {
 				unset($collection[$i]);
 			}
 		}
@@ -446,10 +447,10 @@ class CollectionTest extends \lithium\test\Unit {
 			'data' => array($first, $second, $third)
 		));
 
-		$this->assertTrue(is_object($doc[0]));
-		$this->assertTrue(is_object($doc[1]));
-		$this->assertTrue(is_object($doc[2]));
-		$this->assertEqual(3, count($doc));
+		$this->assertInternalType('object', $doc[0]);
+		$this->assertInternalType('object', $doc[1]);
+		$this->assertInternalType('object', $doc[2]);
+		$this->assertCount(3, $doc);
 	}
 
 	public function testValid() {
@@ -459,6 +460,27 @@ class CollectionTest extends \lithium\test\Unit {
 		$collection = new Collection(array('data' => array(1, 5)));
 		$this->assertTrue($collection->valid());
 	}
+
+	public function testRespondsToParent() {
+		$collection = new Collection();
+		$this->assertTrue($collection->respondsTo('applyFilter'));
+		$this->assertFalse($collection->respondsTo('fooBarBaz'));
+	}
+
+	public function testRespondsToMagic() {
+		$collection = new Collection(array(
+			'data' => array(
+				new Entity(array(
+					'model' => 'lithium\tests\mocks\data\MockPost',
+					'data' => array('stats' => array('foo' => 'bar')),
+				))
+			)
+		));
+		$this->assertTrue($collection->respondsTo('instances'));
+		$this->assertTrue($collection->respondsTo('foobar'));
+		$this->assertFalse($collection->respondsTo('foobarbaz'));
+	}
+
 }
 
 ?>

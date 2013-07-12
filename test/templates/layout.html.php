@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -17,6 +17,7 @@ use lithium\util\Inflector;
 		<?php $base = $request->env('base'); ?>
 		<meta charset="utf-8" />
 		<link rel="stylesheet" href="<?php echo $base; ?>/css/debug.css" />
+		<link rel="stylesheet" href="<?php echo $base; ?>/css/testified.css" />
 		<link href="<?php echo $base; ?>/favicon.ico" type="image/x-icon" rel="icon" />
 		<link href="<?php echo $base; ?>/favicon.ico" type="image/x-icon" rel="shortcut icon" />
 	</head>

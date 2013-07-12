@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -11,6 +11,14 @@ namespace lithium\data\source\mongo_db;
 use MongoGridFSFile;
 
 class Result extends \lithium\data\source\Result {
+
+	public function prev() {
+		return null;
+	}
+
+	protected function _fetchFromCache() {
+		return null;
+	}
 
 	/**
 	 * Fetches the result from the resource and caches it.
@@ -23,7 +31,7 @@ class Result extends \lithium\data\source\Result {
 			$isFile = ($result instanceof MongoGridFSFile);
 			$result = $isFile ? array('file' => $result) + $result->file : $result;
 			$this->_key = $this->_iterator;
-			$this->_current = $this->_cache[$this->_iterator++] = $result;
+			$this->_current = $result;
 			return true;
 		}
 		return false;

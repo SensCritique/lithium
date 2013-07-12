@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -105,7 +105,12 @@ class EnvironmentTest extends \lithium\test\Unit {
 		$this->assertTrue($isProduction);
 
 		$request = new MockRequest(array('SERVER_ADDR' => '::1'));
-		$request->url = 'test/myTest';
+		$request->url = '/test/myTest';
+		Environment::set($request);
+		$this->assertTrue(Environment::is('test'));
+
+		$request = new MockRequest(array('SERVER_ADDR' => '::1'));
+		$request->url = '/test';
 		Environment::set($request);
 		$this->assertTrue(Environment::is('test'));
 
@@ -177,10 +182,10 @@ class EnvironmentTest extends \lithium\test\Unit {
 	 */
 	public function testCustomDetector() {
 		Environment::is(function($request) {
-			if ($request->env('HTTP_HOST') == 'localhost') {
+			if ($request->env('HTTP_HOST') === 'localhost') {
 				return 'development';
 			}
-			if ($request->env('HTTP_HOST') == 'staging.server') {
+			if ($request->env('HTTP_HOST') === 'staging.server') {
 				return 'test';
 			}
 			return 'production';
@@ -229,7 +234,7 @@ class EnvironmentTest extends \lithium\test\Unit {
 		$this->assertEqual(Environment::get(true), Environment::get('development'));
 
 		Environment::set('production');
-		$this->assertFalse(Environment::get(true));
+		$this->assertEmpty(Environment::get(true));
 	}
 }
 

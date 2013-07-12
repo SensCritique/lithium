@@ -2,12 +2,13 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\integration\g11n;
 
+use lithium\core\Libraries;
 use lithium\g11n\Catalog;
 
 /**
@@ -26,7 +27,7 @@ class ResourcesMessageTest extends \lithium\test\Integration {
 		Catalog::config(array(
 			'lithium' => array(
 				'adapter' => 'Php',
-				'path' => LITHIUM_LIBRARY_PATH . '/lithium/g11n/resources/php'
+				'path' => Libraries::get('lithium', 'path') . '/g11n/resources/php'
 			)
 		));
 	}

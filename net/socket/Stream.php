@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -44,6 +44,7 @@ class Stream extends \lithium\net\Socket {
 		if ($config['persistent']) {
 			$flags = STREAM_CLIENT_CONNECT | STREAM_CLIENT_PERSISTENT;
 		}
+		$errorCode = $errorMessage = null;
 		$this->_resource = stream_socket_client(
 			$host, $errorCode, $errorMessage, $config['timeout'], $flags
 		);

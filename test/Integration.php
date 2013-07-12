@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -37,12 +37,46 @@ class Integration extends \lithium\test\Unit {
 
 			while (count($after) > count($before)) {
 				$result = array_pop($after);
-				if ($result['result'] == 'fail') {
+				if ($result['result'] === 'fail') {
 					return false;
 				}
 			}
 		});
 	}
+
+	/**
+	 * Checks for a working internet connection.
+	 *
+	 * This method is used to check for a working connection to google.com, both
+	 * testing for proper DNS resolution and reading the actual URL.
+	 *
+	 * @param array $config Override the default URL to check.
+	 * @return boolean True if a network connection is established, false otherwise.
+	 */
+	protected function _hasNetwork($config = array()) {
+		$defaults = array(
+			'scheme' => 'http',
+			'host' => 'google.com'
+		);
+		$config += $defaults;
+
+		$url = "{$config['scheme']}://{$config['host']}";
+		$failed = false;
+
+		set_error_handler(function($errno, $errstr) use (&$failed) {
+			$failed = true;
+		});
+
+		dns_check_record($config['host'], 'A');
+
+		if ($handle = fopen($url, 'r')) {
+			fclose($handle);
+		}
+
+		restore_error_handler();
+		return !$failed;
+	}
+
 }
 
 ?>

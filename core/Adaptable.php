@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -37,9 +37,9 @@ class Adaptable extends \lithium\core\StaticObject {
 	 * Example:
 	 * {{{
 	 * array(
-	 *	'production' => array(),
-	 *	'development' => array(),
-	 *	'test' => array()
+	 *  'production' => array(),
+	 *  'development' => array(),
+	 *  'test' => array()
 	 * )
 	 * }}}
 	 *
@@ -199,11 +199,8 @@ class Adaptable extends \lithium\core\StaticObject {
 	 *         return null if no configuration under the given $name exists.
 	 */
 	public static function enabled($name) {
-		if (!static::_config($name)) {
-			return null;
-		}
-		$adapter = static::adapter($name);
-		return $adapter::enabled();
+		$class = static::_class(static::_config($name), static::$_adapters);
+		return $class::enabled();
 	}
 
 	/**

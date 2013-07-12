@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -65,7 +65,6 @@ class SetTest extends \lithium\test\Unit {
 		$this->assertEqual(2, $result);
 	}
 
-
 	public function testDepthThreeLevelsWithAll() {
 		$data = array(
 			'1' => array('1.1' => '1.1.1'), '2', '3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
@@ -91,7 +90,8 @@ class SetTest extends \lithium\test\Unit {
 
 		$data = array(
 			'1' => array('1.1' => '1.1.1'), array(
-			'2' => array('2.1' => array('2.1.1' => array('2.1.1.1' => '2.1.1.1.1')))),
+				'2' => array('2.1' => array('2.1.1' => array('2.1.1.1' => '2.1.1.1.1')))
+			),
 			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
 		);
 		$result = Set::depth($data, array('all' => true));
@@ -101,7 +101,8 @@ class SetTest extends \lithium\test\Unit {
 	public function testDepthFourLevelsWithAll() {
 		$data = array(
 			'1' => array('1.1' => '1.1.1'), array(
-			'2' => array('2.1' => array('2.1.1' => '2.1.1.1'))),
+				'2' => array('2.1' => array('2.1.1' => '2.1.1.1')),
+			),
 			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
 		);
 		$result = Set::depth($data, array('all' => true));
@@ -111,7 +112,8 @@ class SetTest extends \lithium\test\Unit {
 	public function testDepthFiveLevelsWithAll() {
 		$data = array(
 			'1' => array('1.1' => '1.1.1'), array(
-			'2' => array('2.1' => array('2.1.1' => array('2.1.1.1')))),
+				'2' => array('2.1' => array('2.1.1' => array('2.1.1.1')))
+			),
 			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
 		);
 		$result = Set::depth($data, array('all' => true));
@@ -298,12 +300,12 @@ class SetTest extends \lithium\test\Unit {
 				'keep' => array()
 			),
 			'Comment' => array(
-				'keep' => array('Attachment' =>  array('fields' => array('attachment')))
+				'keep' => array('Attachment' => array('fields' => array('attachment')))
 			),
 			'User' => array('keep' => array()),
 			'Article' => array(
 				'keep' => array(
-					'Comment' =>  array('fields' => array('comment', 'published')),
+					'Comment' => array('fields' => array('comment', 'published')),
 					'User' => array('fields' => array('user'))
 				)
 			)
@@ -581,7 +583,7 @@ class SetTest extends \lithium\test\Unit {
 		$this->assertEqual($expected, $result);
 	}
 
-	function testExtractAssociatedHasMany() {
+	public function testExtractAssociatedHasMany() {
 		$common = array(
 			array(
 				'Article' => array('id' => 1, 'name' => 'Article 1'),
@@ -1143,7 +1145,7 @@ class SetTest extends \lithium\test\Unit {
 		$this->assertTrue($result);
 
 		$this->assertTrue(Set::check($set, 'My Index 1'));
-		$this->assertTrue(Set::check($set, array()));
+		$this->assertNotEmpty(Set::check($set, array()));
 
 		$set = array('My Index 1' => array('First' => array('Second' => array('Third' => array(
 			'Fourth' => 'Heavy. Nesting.'
@@ -1162,7 +1164,7 @@ class SetTest extends \lithium\test\Unit {
 		$set = Set::remove($set, 'Session Test');
 		$this->assertFalse(Set::check($set, 'Session Test'));
 
-		$this->assertTrue($set = Set::insert(array(), 'Session Test.Test Case', "test"));
+		$this->assertNotEmpty($set = Set::insert(array(), 'Session Test.Test Case', "test"));
 		$this->assertTrue(Set::check($set, 'Session Test.Test Case'));
 	}
 
@@ -1208,17 +1210,21 @@ class SetTest extends \lithium\test\Unit {
 
 	public function testCombine() {
 		$result = Set::combine(array(), '/User/id', '/User/Data');
-		$this->assertFalse($result);
+		$this->assertEmpty($result);
 		$result = Set::combine('', '/User/id', '/User/Data');
-		$this->assertFalse($result);
+		$this->assertEmpty($result);
 
 		$a = array(
 			array('User' => array('id' => 2, 'group_id' => 1,
-				'Data' => array('user' => 'mariano.iglesias','name' => 'Mariano Iglesias'))),
+				'Data' => array('user' => 'mariano.iglesias','name' => 'Mariano Iglesias')
+			)),
 			array('User' => array('id' => 14, 'group_id' => 2,
-				'Data' => array('user' => 'jperras', 'name' => 'Joel Perras'))),
+				'Data' => array('user' => 'jperras', 'name' => 'Joel Perras')
+			)),
 			array('User' => array('id' => 25, 'group_id' => 1,
-				'Data' => array('user' => 'gwoo','name' => 'The Gwoo'))));
+				'Data' => array('user' => 'gwoo','name' => 'The Gwoo')
+			))
+		);
 		$result = Set::combine($a, '/User/id');
 		$expected = array(2 => null, 14 => null, 25 => null);
 		$this->assertIdentical($expected, $result);
@@ -1231,32 +1237,40 @@ class SetTest extends \lithium\test\Unit {
 		$expected = array(
 			2 => array('user' => 'mariano.iglesias', 'name' => 'Mariano Iglesias'),
 			14 => array('user' => 'jperras', 'name' => 'Joel Perras'),
-			25 => array('user' => 'gwoo', 'name' => 'The Gwoo'));
+			25 => array('user' => 'gwoo', 'name' => 'The Gwoo')
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($a, '/User/id', '/User/Data/name/.');
 		$expected = array(
 			2 => 'Mariano Iglesias',
 			14 => 'Joel Perras',
-			25 => 'The Gwoo');
+			25 => 'The Gwoo'
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($a, '/User/id', '/User/Data/.', '/User/group_id');
 		$expected = array(
 			1 => array(
 				2 => array('user' => 'mariano.iglesias', 'name' => 'Mariano Iglesias'),
-				25 => array('user' => 'gwoo', 'name' => 'The Gwoo')),
+				25 => array('user' => 'gwoo', 'name' => 'The Gwoo')
+			),
 			2 => array(
-				14 => array('user' => 'jperras', 'name' => 'Joel Perras')));
+				14 => array('user' => 'jperras', 'name' => 'Joel Perras')
+			)
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($a, '/User/id', '/User/Data/name/.', '/User/group_id');
 		$expected = array(
 			1 => array(
 				2 => 'Mariano Iglesias',
-				25 => 'The Gwoo'),
+				25 => 'The Gwoo'
+			),
 			2 => array(
-				14 => 'Joel Perras'));
+				14 => 'Joel Perras'
+			)
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine(
@@ -1434,10 +1448,16 @@ class SetTest extends \lithium\test\Unit {
 
 		$expected = array(
 			'ModelOne' => array(
-				'id' => 1001, 'field_one' => 's1.0.m1.f1', 'field_two' => 's1.0.m1.f2', 'field_three' => 's1.0.m1.f3'
+				'id' => 1001,
+				'field_one' => 's1.0.m1.f1',
+				'field_two' => 's1.0.m1.f2',
+				'field_three' => 's1.0.m1.f3'
 			),
 			'ModelTwo' => array(
-				'id' => 1002, 'field_one' => 's1.0.m2.f1', 'field_two' => 's1.0.m2.f2', 'field_three' => 's1.0.m2.f3'
+				'id' => 1002,
+				'field_one' => 's1.0.m2.f1',
+				'field_two' => 's1.0.m2.f2',
+				'field_three' => 's1.0.m2.f3'
 			)
 		);
 		$this->assertIdentical($expected, $result);

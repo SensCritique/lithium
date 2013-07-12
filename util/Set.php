@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -124,7 +124,7 @@ class Set {
 		for ($i = $valCount; $i < $count; $i++) {
 			$vals[$i] = null;
 		}
-		if ($groupPath != null) {
+		if ($groupPath) {
 			$group = static::extract($data, $groupPath);
 			if (!empty($group)) {
 				$c = count($keys);
@@ -157,7 +157,7 @@ class Set {
 			return false;
 		}
 		foreach ($array2 as $key => $val) {
-			if (!isset($array1[$key]) || $array1[$key] != $val) {
+			if (!isset($array1[$key]) || $array1[$key] !== $val) {
 				return false;
 			}
 			if (is_array($val) && !static::contains($array1[$key], $val)) {
@@ -215,7 +215,7 @@ class Set {
 		foreach ($val1 as $key => $val) {
 			$exists = isset($val2[$key]);
 
-			if (($exists && $val2[$key] != $val) || !$exists) {
+			if (($exists && $val2[$key] !== $val) || !$exists) {
 				$out[$key] = $val;
 			}
 			unset($val2[$key]);
@@ -234,20 +234,20 @@ class Set {
 	 *
 	 * @param array $data An array of data to extract from.
 	 * @param string $path An absolute XPath 2.0 path. Only absolute paths starting with a
-	 *               single slash are supported right now. Implemented selectors:
-	 *               - `'/User/id'`: Similar to the classic {n}.User.id.
-	 *               - `'/User[2]/name'`: Selects the name of the second User.
-	 *               - `'/User[id>2]'`: Selects all Users with an id > 2.
-	 *               - `'/User[id>2][<5]'`: Selects all Users with an id > 2 but < 5.
-	 *               - `'/Post/Comment[author_name=John]/../name'`: Selects the name of
-	 *                 all posts that have at least one comment written by John.
-	 *               - `'/Posts[name]'`: Selects all Posts that have a `'name'` key.
-	 *               - `'/Comment/.[1]'`: Selects the contents of the first comment.
-	 *               - `'/Comment/.[:last]'`: Selects the last comment.
-	 *               - `'/Comment/.[:first]'`: Selects the first comment.
-	 *               - `'/Comment[text=/lithium/i]`': Selects the all comments that have
-	 *                 a text matching the regex `/lithium/i`.
-	 *               - `'/Comment/@*'`: Selects all key names of all comments.
+	 *        single slash are supported right now. Implemented selectors:
+	 *        - `'/User/id'`: Similar to the classic {n}.User.id.
+	 *        - `'/User[2]/name'`: Selects the name of the second User.
+	 *        - `'/User[id>2]'`: Selects all Users with an id > 2.
+	 *        - `'/User[id>2][<5]'`: Selects all Users with an id > 2 but < 5.
+	 *        - `'/Post/Comment[author_name=John]/../name'`: Selects the name of
+	 *          all posts that have at least one comment written by John.
+	 *        - `'/Posts[name]'`: Selects all Posts that have a `'name'` key.
+	 *        - `'/Comment/.[1]'`: Selects the contents of the first comment.
+	 *        - `'/Comment/.[:last]'`: Selects the last comment.
+	 *        - `'/Comment/.[:first]'`: Selects the first comment.
+	 *        - `'/Comment[text=/lithium/i]`': Selects the all comments that have
+	 *          a text matching the regex `/lithium/i`.
+	 *        - `'/Comment/@*'`: Selects all key names of all comments.
 	 * @param array $options Currently only supports `'flatten'` which can be
 	 *              disabled for higher XPath-ness.
 	 * @return array An array of matched items.
@@ -293,7 +293,7 @@ class Set {
 					$context = array('trace' => array(null), 'item' => $context, 'key' => $key);
 				}
 				if ($token === '..') {
-					if (count($context['trace']) == 1) {
+					if (count($context['trace']) === 1) {
 						$context['trace'][] = $context['key'];
 					}
 
@@ -306,6 +306,7 @@ class Set {
 					continue;
 				}
 				$match = false;
+
 				if ($token === '@*' && is_array($context['item'])) {
 					$matches[] = array(
 						'trace' => array_merge($context['trace'], (array) $key),
@@ -351,7 +352,7 @@ class Set {
 						);
 					}
 				} elseif (
-					($key === $token || (ctype_digit($token) && $key == $token) || $token === '.')
+					$key === $token || (ctype_digit($token) && $key == $token) || $token === '.'
 				) {
 					$context['trace'][] = $key;
 					$matches[] = array(
@@ -402,8 +403,8 @@ class Set {
 	 *
 	 * @param array $data array to flatten
 	 * @param array $options Available options are:
-	 *              - `'separator'`: String to separate array keys in path (defaults to `'.'`).
-	 *              - `'path'`: Starting point (defaults to null).
+	 *        - `'separator'`: String to separate array keys in path (defaults to `'.'`).
+	 *        - `'path'`: Starting point (defaults to null).
 	 * @return array
 	 */
 	public static function flatten($data, array $options = array()) {
@@ -430,10 +431,10 @@ class Set {
 	 *
 	 * @param array $data The one-dimensional array to expand.
 	 * @param array $options The options used when expanding the array:
-	 *              - `'separator'` _string_: The delimiter to use when separating keys. Defaults
-	 *                to `'.'`.
-	 * @return array Returns a multi-dimensional array expanded from a one dimensional dot-separated
-	 *         array.
+	 *        - `'separator'` _string_: The delimiter to use when separating keys. Defaults
+	 *          to `'.'`.
+	 * @return array Returns a multi-dimensional array expanded from a one dimensional
+	 *         dot-separated array.
 	 */
 	public static function expand(array $data, array $options = array()) {
 		$defaults = array('separator' => '.');
@@ -551,7 +552,7 @@ class Set {
 	 *
 	 * @param array $array The array to check.  If null, the value of the current Set object.
 	 * @return mixed `true` if values are numeric, `false` if not and `null` if the array to
-	 * check is empty.
+	 *               check is empty.
 	 */
 	public static function isNumeric($array = null) {
 		if (empty($array)) {
@@ -592,19 +593,19 @@ class Set {
 		}
 		foreach ($conditions as $condition) {
 			if ($condition === ':last') {
-				if ($i != $length) {
+				if ($i !== $length) {
 					return false;
 				}
 				continue;
 			} elseif ($condition === ':first') {
-				if ($i != 1) {
+				if ($i !== 1) {
 					return false;
 				}
 				continue;
 			}
 			if (!preg_match('/(.+?)([><!]?[=]|[><])(.*)/', $condition, $match)) {
 				if (ctype_digit($condition)) {
-					if ($i != $condition) {
+					if ($i !== (int) $condition) {
 						return false;
 					}
 				} elseif (preg_match_all('/(?:^[0-9]+|(?<=,)[0-9]+)/', $condition, $matches)) {
@@ -621,9 +622,9 @@ class Set {
 			}
 			$val = $data[$key];
 
-			if ($op === '=' && $expected && $expected{0} === '/') {
+			if ($op === '=' && $expected && $expected[0] === '/') {
 				return preg_match($expected, $val);
-			} elseif ($op === '=' &&  $val != $expected) {
+			} elseif ($op === '=' && $val != $expected) {
 				return false;
 			} elseif ($op === '!=' && $val == $expected) {
 				return false;

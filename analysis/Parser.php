@@ -75,9 +75,7 @@ class Parser extends \lithium\core\StaticObject {
 			}
 			$tokens[] = array('id' => $id, 'name' => $name, 'content' => $content, 'line' => $line);
 
-			if ($id === T_WHITESPACE) {
-				$line += count(preg_split('/\r\n|\r|\n/', $content)) - 1;
-			}
+			$line += count(preg_split('/\r\n|\r|\n/', $content)) - 1;
 		}
 
 		if ($options['wrap'] && empty($options['include'])) {
@@ -132,7 +130,7 @@ class Parser extends \lithium\core\StaticObject {
 			if (empty($patternMatch) && $options['startOfLine']) {
 				return ($token['line'] > $prev['line']);
 			}
-			return ($token['line'] == $prev['line']);
+			return ($token['line'] === $prev['line']);
 		};
 
 		$capture = function($token) use (&$matches, &$patternMatch, $tokens, $breaks, $options) {
@@ -144,7 +142,7 @@ class Parser extends \lithium\core\StaticObject {
 			if (empty($patternMatch)) {
 				$prev = $tokens->prev();
 				$tokens->next();
-				if ($options['startOfLine'] && $token['line'] == $prev['line']) {
+				if ($options['startOfLine'] && $token['line'] === $prev['line']) {
 					$patternMatch = $matches = array();
 					return false;
 				}
@@ -261,7 +259,7 @@ class Parser extends \lithium\core\StaticObject {
 	 * @return boolean Match result.
 	 */
 	public static function matchToken($pattern, $token) {
-		if ($pattern['name'] != $token['name']) {
+		if ($pattern['name'] !== $token['name']) {
 			return false;
 		}
 
@@ -272,13 +270,13 @@ class Parser extends \lithium\core\StaticObject {
 		$match = $pattern['content'];
 		$content = $token['content'];
 
-		if ($pattern['name'] == 'T_VARIABLE') {
+		if ($pattern['name'] === 'T_VARIABLE') {
 			$match = substr($match, 1);
 			$content = substr($content, 1);
 		}
 
 		switch (true) {
-			case ($match == '_' || $match == $content):
+			case ($match === '_' || $match === $content):
 				return true;
 		}
 		return false;

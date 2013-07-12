@@ -79,10 +79,8 @@ class FirePhp extends \lithium\core\Object {
 	 */
 	protected $_headers = array(
 		'X-Wf-Protocol-1' => 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2',
-		'X-Wf-1-Plugin-1' =>
-			'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/0.3',
-		'X-Wf-1-Structure-1' =>
-			'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1'
+		'X-Wf-1-Plugin-1' => 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/0.3',
+		'X-Wf-1-Structure-1' => 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1'
 	);
 
 	/**
@@ -158,7 +156,7 @@ class FirePhp extends \lithium\core\Object {
 	}
 
 	/**
-	 * Heper method that writes the message to the header of a bound `Response` object. If no
+	 * Helper method that writes the message to the header of a bound `Response` object. If no
 	 * `Response` object is bound when this method is called, it is stored in a message queue.
 	 *
 	 * @see lithium\analysis\logger\adapter\FirePhp::_format()

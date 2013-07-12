@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -28,14 +28,6 @@ use InvalidArgumentException;
  * @see lithium\data\Source
  */
 class Query extends \lithium\core\Object {
-
-	/**
-	 * The 'type' of query to be performed. This is either `'create'`, `'read'`, `'update'` or
-	 * `'delete'`, and corresponds to the method to be executed.
-	 *
-	 * @var string
-	 */
-	protected $_type = null;
 
 	/**
 	 * Array containing mappings of relationship and field names, which allow database results to
@@ -83,7 +75,6 @@ class Query extends \lithium\core\Object {
 	 * The query's fields
 	 *
 	 * @see lithium\data\model\Query::fields()
-	 *
 	 * @var array
 	 */
 	protected $_fields = array(0 => array(), 1 => array());
@@ -93,7 +84,6 @@ class Query extends \lithium\core\Object {
 	 * unique aliases
 	 *
 	 * @see lithium\data\model\Query::alias()
-	 *
 	 * @var array
 	 */
 	protected $_alias = array();
@@ -102,7 +92,6 @@ class Query extends \lithium\core\Object {
 	 * Map beetween generated aliases and corresponding relation paths
 	 *
 	 * @see lithium\data\model\Query::alias()
-	 *
 	 * @var array
 	 */
 	protected $_paths = array();
@@ -111,7 +100,6 @@ class Query extends \lithium\core\Object {
 	 * Map beetween generated aliases and corresponding models.
 	 *
 	 * @see lithium\data\model\Query::alias()
-	 *
 	 * @var array
 	 */
 	protected $_models = array();
@@ -121,14 +109,13 @@ class Query extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_autoConfig = array('type', 'map');
+	protected $_autoConfig = array('map');
 
 	/**
 	 * Initialization methods on construct
 	 *
 	 * @var array
 	 */
-
 	protected $_initializers = array(
 		'model', 'entity', 'conditions', 'having', 'group', 'order',
 		'limit', 'offset', 'page', 'data', 'calculate', 'schema', 'comment'
@@ -153,7 +140,8 @@ class Query extends \lithium\core\Object {
 	 * core data source and implement custom fucntionality.
 	 *
 	 * @param array $config Config options:
-	 *        - `'type'` _string_: The type of the query (`read`, `insert`, `update`, `delete`).
+	 *        - `'type'` _string_: The type of the query (`read`, `create`, `update`, `delete`).
+	 *        - `'mode'` _string_: `JOIN` mode for a join query.
 	 *        - `'entity'` _object_: The base entity to query on. If set `'model'` is optionnal.
 	 *        - `'model'` _string_: The base model to query on.
 	 *        - `'source'` _string_: The name of the table/collection. Unnecessary
@@ -180,6 +168,8 @@ class Query extends \lithium\core\Object {
 	 */
 	public function __construct(array $config = array()) {
 		$defaults = array(
+			'type' => 'read',
+			'mode' => null,
 			'model' => null,
 			'entity' => null,
 			'source' => null,
@@ -207,8 +197,6 @@ class Query extends \lithium\core\Object {
 
 	protected function _init() {
 		parent::_init();
-		unset($this->_config['type']);
-
 		$keys = array_keys($this->_config);
 		foreach ($this->_initializers as $key) {
 			$val = $this->_config[$key];
@@ -239,15 +227,6 @@ class Query extends \lithium\core\Object {
 		$this->fields($this->_config['fields']);
 
 		unset($this->_config['entity'], $this->_config['init']);
-	}
-
-	/**
-	 * Get method of type, i.e. 'read', 'update', 'create', 'delete'.
-	 *
-	 * @return string
-	 */
-	public function type() {
-		return $this->_type;
 	}
 
 	/**
@@ -334,17 +313,17 @@ class Query extends \lithium\core\Object {
 	 *
 	 * Usage:
 	 * {{{
-	 *	// to add a field
-	 *   $query->fields('created');
+	 * // to add a field
+	 * $query->fields('created');
 	 * }}}
 	 * {{{
-	 *	// to add several fields
-	 *   $query->fields(array('title','body','modified'));
+	 * // to add several fields
+	 * $query->fields(array('title','body','modified'));
 	 * }}}
 	 * {{{
-	 *	// to reset fields to none
-	 *   $query->fields(false);
-	 *   // should be followed by a 2nd call to fields with required fields
+	 * // to reset fields to none
+	 * $query->fields(false);
+	 * // should be followed by a 2nd call to fields with required fields
 	 * }}}
 	 *
 	 * @param mixed $fields string, array or `false`
@@ -579,10 +558,7 @@ class Query extends \lithium\core\Object {
 			$keys =& $this->_config;
 		}
 
-		$results = array('type' => $this->_type);
-
-		$apply = array_intersect_key($keys, array_flip($source->methods()));
-		$copy = array_diff_key($keys, $apply);
+		list($copy, $apply) = Set::slice($keys, $source->methods());
 
 		if (isset($keys['with'])) {
 			$this->applyStrategy($source);
@@ -766,6 +742,17 @@ class Query extends \lithium\core\Object {
 	}
 
 	/**
+	 * Custom check to determine if our given magic methods can be responded to.
+	 *
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
+	 */
+	public function respondsTo($method, $internal = false) {
+		return isset($this->_config[$method]) || parent::respondsTo($method, $internal);
+	}
+
+	/**
 	 * Will return a find first condition on the associated model if a record is connected.
 	 * Called by conditions when it is called as a get and no condition is set.
 	 *
@@ -778,7 +765,7 @@ class Query extends \lithium\core\Object {
 		}
 		$key = $model::key($this->_entity->data());
 
-		if (!$key && $this->_type != "create") {
+		if (!$key && $this->type() !== 'create') {
 			throw new ConfigException('No matching primary key found.');
 		}
 		if (is_array($key)) {
@@ -796,12 +783,10 @@ class Query extends \lithium\core\Object {
 	 * during the export according the export's `mode` option and the query `with` option.
 	 *
 	 * @see lithium\data\model\Query::export()
-	 *
 	 * @param string $relpath a dotted relation path
 	 * @param string $query a query instance
 	 * @return mixed
 	 */
-
 	public function childs($relpath = null, $query = null) {
 		if (!$model = $this->model()) {
 			throw new ConfigException("No binded model.");

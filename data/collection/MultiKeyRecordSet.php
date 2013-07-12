@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -187,10 +187,10 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 	 *
 	 * @param callback $filter Callback to use for filtering.
 	 * @param array $options The available options are:
-	 *              - `'collect'`: If `true`, the results will be returned wrapped
-	 *              in a new `Collection` object or subclass.
+	 *        - `'collect'`: If `true`, the results will be returned wrapped
+	 *        in a new `Collection` object or subclass.
 	 * @return mixed The filtered items. Will be an array unless `'collect'` is defined in the
-	 * `$options` argument, then an instance of this class will be returned.
+	 *         `$options` argument, then an instance of this class will be returned.
 	 */
 	public function find($filter, array $options = array()) {
 		$this->offsetGet(null);
@@ -236,7 +236,8 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 
 	protected function _set($data = null, $offset = null, $options = array()) {
 		if ($model = $this->_model) {
-			$data = !is_object($data) ? $model::connection()->item($model, $data, $options) : $data;
+			$options += array('defaults' => false);
+			$data = !is_object($data) ? $model::create($data, $options) : $data;
 			$key = $model::key($data);
 		} else {
 			$key = $offset;

@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -69,14 +69,13 @@ class FilterTest extends \lithium\test\Integration {
 			$report->run();
 
 			if (array_key_exists("Coverage", $filters)) {
-				$expected = 40;
+				$expected = 66.67;
 
 				$result = $report->results['filters'];
 
-				$this->assertTrue(isset($result['lithium\test\filter\Coverage']),
-					"Filter(s): '" . join(array_keys($filters), ", ") . "'"
-					. "returned no Coverage results."
-				);
+				$message = "Filter(s): '" . join(array_keys($filters), ", ") . "'";
+				$message .= "returned no Coverage results.";
+				$this->assertTrue(isset($result['lithium\test\filter\Coverage']), $message);
 				$percentage = $result['lithium\test\filter\Coverage'];
 				$percentage = $percentage['lithium\tests\mocks\test\MockFilterClass'];
 				$percentage = $percentage['percentage'];
@@ -86,13 +85,12 @@ class FilterTest extends \lithium\test\Integration {
 		}
 	}
 
-	/*
+	/**
 	 * Methods for getting all permutations of each set in the power set of an
 	 * array of strings (from the php.net manual on shuffle).
 	 *
 	 * @todo This needs further refactoring.
 	 */
-
 	protected function _powerPerms($arr) {
 		$powerSet = $this->_powerSet($arr);
 		$result = array();
@@ -114,7 +112,7 @@ class FilterTest extends \lithium\test\Integration {
 			$out = array();
 
 			for ($j = 0; $j < $count; $j++) {
-				if ($b[$j] == '1') {
+				if ($b[$j] === '1') {
 					$out[] = $in[$j];
 				}
 			}
@@ -126,10 +124,13 @@ class FilterTest extends \lithium\test\Integration {
 	}
 
 	protected function _factorial($int) {
-		if ($int < 2) {
+		if (!$int) {
 			return 1;
 		}
-		for ($f = 2; $int - 1 > 1; $f *= $int--) {}
+		$f = $int;
+		while ($int > 1) {
+			$f *= --$int;
+		}
 		return $f;
 	}
 

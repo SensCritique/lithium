@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -153,21 +153,15 @@ class MockSource extends \lithium\data\Source {
 
 	}
 
-	public function cast($entity, array $data = array(), array $options = array()) {
-		$defaults = array('first' => false);
-		$options += $defaults;
-		return $options['first'] ? reset($data) : $data;
-	}
-
 	public function relationship($class, $type, $name, array $config = array()) {
-		$field = Inflector::underscore(Inflector::singularize($name));//($type == 'hasMany') ?  : ;
+		$field = Inflector::underscore(Inflector::singularize($name));
 		$key = "{$field}_id";
 		$primary = $class::meta('key');
 
 		if (is_array($primary)) {
 			$key = array_combine($primary, $primary);
-		} elseif ($type == 'hasMany' || $type == 'hasOne') {
-			if ($type == 'hasMany') {
+		} elseif ($type === 'hasMany' || $type === 'hasOne') {
+			if ($type === 'hasMany') {
 				$field = Inflector::pluralize($field);
 			}
 			$secondary = Inflector::underscore(Inflector::singularize($class::meta('name')));
@@ -183,6 +177,21 @@ class MockSource extends \lithium\data\Source {
 	public function calculation($type, $query, array $options = array()) {
 		$query->calculate($type);
 		return compact('query', 'options');
+	}
+
+	public static function enabled($feature = null) {
+		if (!$feature) {
+			return true;
+		}
+		$features = array(
+			'arrays' => false,
+			'transactions' => true,
+			'booleans' => true,
+			'schema' => true,
+			'relationships' => true,
+			'sources' => true
+		);
+		return isset($features[$feature]) ? $features[$feature] : null;
 	}
 }
 

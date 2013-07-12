@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -65,6 +65,12 @@ abstract class Helper extends \lithium\core\Object {
 		'nohref', 'noshade', 'nowrap', 'multiple', 'noresize', 'async', 'autofocus'
 	);
 
+	/**
+	 * Sets up defaults and passes to parent to setup class.
+	 *
+	 * @param  array $config Configuration options.
+	 * @return void
+	 */
 	public function __construct(array $config = array()) {
 		$defaults = array('handlers' => array(), 'context' => null);
 		parent::__construct($config + $defaults);
@@ -146,6 +152,11 @@ abstract class Helper extends \lithium\core\Object {
 	protected function _render($method, $string, $params, array $options = array()) {
 		$strings = $this->_strings;
 
+		if (isset($params['options']['scope'])) {
+			$options['scope'] = $params['options']['scope'];
+			unset($params['options']['scope']);
+		}
+
 		if ($this->_context) {
 			foreach ($params as $key => $value) {
 				$handler = isset($options['handlers'][$key]) ? $options['handlers'][$key] : $key;
@@ -198,7 +209,7 @@ abstract class Helper extends \lithium\core\Object {
 		$options += $defaults;
 
 		if (in_array($key, $this->_minimized)) {
-			$isMini = ($value == 1 || $value === true || $value == $key);
+			$isMini = ($value === 1 || $value === true || $value === $key);
 			if (!($value = $isMini ? $key : $value)) {
 				return null;
 			}

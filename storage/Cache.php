@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -122,7 +122,6 @@ class Cache extends \lithium\core\Adaptable {
 		$params = compact('key', 'data', 'expiry');
 		return static::_filter(__FUNCTION__, $params, $method, $settings[$name]['filters']);
 	}
-
 
 	/**
 	 * Reads from the specified cache configuration

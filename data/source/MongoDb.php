@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -86,7 +86,7 @@ class MongoDb extends \lithium\data\Source {
 		'!'   => '$not',
 		'and' => '$and',
 		'&&'  => '$and',
-		'nor' => 'nor'
+		'nor' => '$nor'
 	);
 
 	/**
@@ -143,9 +143,8 @@ class MongoDb extends \lithium\data\Source {
 	 *          or an array containing a read preference and a tag set such as:
 	 *          array(Mongo::RP_SECONDARY_PREFERRED, array('dc' => 'east) See the documentation for
 	 *          `Mongo::setReadPreference()`. Defaults to null.
-	 *
-	 * Typically, these parameters are set in `Connections::add()`, when adding the adapter to the
-	 * list of active connections.
+	 *          Typically, these parameters are set in `Connections::add()`, when adding the
+	 *          adapter to the list of active connections.
 	 */
 	public function __construct(array $config = array()) {
 		$host = 'localhost:27017';
@@ -164,7 +163,8 @@ class MongoDb extends \lithium\data\Source {
 			'schema'     => null,
 			'gridPrefix' => 'fs',
 			'safe'       => false,
-			'readPreference' => null
+			'readPreference' => null,
+			'autoConnect' => false
 		);
 		parent::__construct($config + $defaults);
 	}
@@ -206,7 +206,9 @@ class MongoDb extends \lithium\data\Source {
 			'arrays' => true,
 			'transactions' => false,
 			'booleans' => true,
-			'relationships' => true
+			'relationships' => true,
+			'schema' => false,
+			'sources' => true
 		);
 		return isset($features[$feature]) ? $features[$feature] : null;
 	}
@@ -222,7 +224,11 @@ class MongoDb extends \lithium\data\Source {
 	 *         their respective properties in `Model`.
 	 */
 	public function configureClass($class) {
-		return array('schema' => array(), 'meta' => array('key' => '_id', 'locked' => false));
+		return array(
+			'classes' => $this->_classes,
+			'schema' => array(),
+			'meta' => array('key' => '_id', 'locked' => false)
+		);
 	}
 
 	/**
@@ -247,7 +253,7 @@ class MongoDb extends \lithium\data\Source {
 
 		$options = array(
 			'connect' => true,
-			'timeout' => $cfg['timeout'],
+			'connectTimeoutMS' => $cfg['timeout'],
 			'replicaSet' => $cfg['replicaSet']
 		);
 
@@ -352,6 +358,18 @@ class MongoDb extends \lithium\data\Source {
 	}
 
 	/**
+	 * Custom check to determine if our given magic methods can be responded to.
+	 *
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
+	 */
+	public function respondsTo($method, $internal = false) {
+		$childRespondsTo = is_object($this->server) && is_callable(array($this->server, $method));
+		return parent::respondsTo($method, $internal) || $childRespondsTo;
+	}
+
+	/**
 	 * Normally used in cases where the query is a raw string (as opposed to a `Query` object),
 	 * to database must determine the correct column names from the result resource. Not
 	 * applicable to this data source.
@@ -390,7 +408,7 @@ class MongoDb extends \lithium\data\Source {
 			$data    = $_exp::get('create', $args['data']);
 			$source  = $args['source'];
 
-			if ($source == "{$_config['gridPrefix']}.files" && isset($data['create']['file'])) {
+			if ($source === "{$_config['gridPrefix']}.files" && isset($data['create']['file'])) {
 				$result = array('ok' => true);
 				$data['create']['_id'] = $self->invokeMethod('_saveFile', array($data['create']));
 			} else {
@@ -409,7 +427,7 @@ class MongoDb extends \lithium\data\Source {
 
 	protected function _saveFile($data) {
 		$uploadKeys = array('name', 'type', 'tmp_name', 'error', 'size');
-		$grid = $this->connection->getGridFS();
+		$grid = $this->connection->getGridFS($this->_config['gridPrefix']);
 		$file = null;
 		$method = null;
 
@@ -460,16 +478,17 @@ class MongoDb extends \lithium\data\Source {
 			$options = $params['options'];
 			$args = $query->export($self);
 			$source = $args['source'];
+			$model = $query->model();
 
 			if ($group = $args['group']) {
 				$result = $self->invokeMethod('_group', array($group, $args, $options));
-				$config = array('class' => 'set') + compact('query') + $result;
-				return $self->item($query->model(), $config['data'], $config);
+				$config = array('class' => 'set', 'defaults' => false) + compact('query') + $result;
+				return $model::create($config['data'], $config);
 			}
 			$collection = $self->connection->{$source};
 
-			if ($source == "{$_config['gridPrefix']}.files") {
-				$collection = $self->connection->getGridFS();
+			if ($source === "{$_config['gridPrefix']}.files") {
+				$collection = $self->connection->getGridFS($_config['gridPrefix']);
 			}
 			$result = $collection->find($args['conditions'], $args['fields']);
 
@@ -479,8 +498,8 @@ class MongoDb extends \lithium\data\Source {
 
 			$resource = $result->sort($args['order'])->limit($args['limit'])->skip($args['offset']);
 			$result = $self->invokeMethod('_instance', array('result', compact('resource')));
-			$config = compact('result', 'query') + array('class' => 'set');
-			return $self->item($query->model(), array(), $config);
+			$config = compact('result', 'query') + array('class' => 'set', 'defaults' => false);
+			return $model::create(array(), $config);
 		});
 	}
 
@@ -528,7 +547,7 @@ class MongoDb extends \lithium\data\Source {
 				$data = $_exp::get('update', $data);
 			}
 
-			if ($source == "{$_config['gridPrefix']}.files" && isset($data['update']['file'])) {
+			if ($source === "{$_config['gridPrefix']}.files" && isset($data['update']['file'])) {
 				$args['data']['_id'] = $self->invokeMethod('_saveFile', array($data['update']));
 			}
 			$update = $query->entity() ? $_exp::toCommand($data) : $data;
@@ -566,7 +585,7 @@ class MongoDb extends \lithium\data\Source {
 			$source = $args['source'];
 			$conditions = $args['conditions'];
 
-			if ($source == "{$_config['gridPrefix']}.files") {
+			if ($source === "{$_config['gridPrefix']}.files") {
 				$result = $self->invokeMethod('_deleteFile', array($conditions));
 			} else {
 				$result = $self->connection->{$args['source']}->remove($conditions, $options);
@@ -581,7 +600,9 @@ class MongoDb extends \lithium\data\Source {
 	protected function _deleteFile($conditions, $options = array()) {
 		$defaults = array('safe' => true);
 		$options += $defaults;
-		return $this->connection->getGridFS()->remove($conditions, $options);
+		return $this->connection
+			->getGridFS($this->_config['gridPrefix'])
+			->remove($conditions, $options);
 	}
 
 	/**
@@ -612,9 +633,10 @@ class MongoDb extends \lithium\data\Source {
 	 * @return array
 	 */
 	public function relationship($class, $type, $name, array $config = array()) {
-		$key = Inflector::camelize($type == 'belongsTo' ? $class::meta('name') : $name, false);
+		$key = Inflector::camelize($type === 'belongsTo' ? $class::meta('name') : $name, false);
 
-		$config += compact('name', 'type', 'key');
+		$fieldName = $this->relationFieldName($type, $name);
+		$config += compact('name', 'type', 'key', 'fieldName');
 		$config['from'] = $class;
 		$relationship = $this->_classes['relationship'];
 
@@ -680,6 +702,7 @@ class MongoDb extends \lithium\data\Source {
 	/**
 	 * Protected helper method used to format conditions.
 	 *
+	 * @todo Catch Document/Array objects used in conditions and extract their values.
 	 * @param array $conditions The conditions array to be processed.
 	 * @param string $model The name of the model class used in the query.
 	 * @param object $schema The object containing the schema definition.
@@ -705,9 +728,6 @@ class MongoDb extends \lithium\data\Source {
 				$conditions[$operator] = $value;
 				continue;
 			}
-			/**
-			 * @todo Catch Document/Array objects used in conditions and extract their values.
-			 */
 			if (is_object($value)) {
 				continue;
 			}
@@ -814,7 +834,7 @@ class MongoDb extends \lithium\data\Source {
 				continue;
 			}
 			if (is_string($value)) {
-				$order[$key] = strtolower($value) == 'asc' ? 1 : -1;
+				$order[$key] = strtolower($value) === 'asc' ? 1 : -1;
 			}
 		}
 		return $order;
@@ -824,6 +844,23 @@ class MongoDb extends \lithium\data\Source {
 		if (!$this->_isConnected && !$this->connect()) {
 			throw new NetworkException("Could not connect to the database.");
 		}
+	}
+
+	/**
+	 * Returns the field name of a relation name (camelBack).
+	 *
+	 * @param string The type of the relation.
+	 * @param string The name of the relation.
+	 * @return string
+	 */
+	public function relationFieldName($type, $name) {
+		$fieldName = Inflector::camelize($name, false);
+		if (preg_match('/Many$/', $type)) {
+			$fieldName = Inflector::pluralize($fieldName);
+		} else {
+			$fieldName = Inflector::singularize($fieldName);
+		}
+		return $fieldName;
 	}
 }
 

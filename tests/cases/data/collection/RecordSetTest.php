@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -59,14 +59,18 @@ class RecordSetTest extends \lithium\test\Unit {
 
 		$model = $this->_model;
 
-		$this->_recordSet = new MockRecordSet(compact('result', 'model') + array('exists' => true));
+		$this->_recordSet = new MockRecordSet(compact('result', 'model') + array(
+			'exists' => true
+		));
 
 		$result = new MockResult(array('records' => $this->_records));
 
 		foreach ($this->_records as $i => $record) {
 			$this->_objectRecords[$i] = new MockPostObject($record);
 		}
-		$this->_objectRecordSet = new MockRecordSet(compact('result', 'model') + array('exists' => true));
+		$this->_objectRecordSet = new MockRecordSet(compact('result', 'model') + array(
+			'exists' => true
+		));
 	}
 
 	public function tearDown() {
@@ -75,7 +79,7 @@ class RecordSetTest extends \lithium\test\Unit {
 
 	public function testInit() {
 		$recordSet = new MockRecordSet();
-		$this->assertTrue($recordSet instanceof RecordSet);
+		$this->assertInstanceOf('lithium\data\collection\RecordSet', $recordSet);
 
 		$recordSet = new MockRecordSet(array(
 			'model'  => $this->_model,
@@ -94,14 +98,14 @@ class RecordSetTest extends \lithium\test\Unit {
 		$this->assertTrue($this->_recordSet->offsetExists(3));
 		$this->assertTrue($this->_recordSet->offsetExists(4));
 
-		$this->assertTrue(isset($this->_recordSet[3]));
+		$this->assertArrayHasKey(3, $this->_recordSet);
 
 		$this->assertFalse($this->_objectRecordSet->offsetExists(0));
 		$this->assertTrue($this->_objectRecordSet->offsetExists(1));
 		$this->assertTrue($this->_objectRecordSet->offsetExists(2));
 		$this->assertTrue($this->_objectRecordSet->offsetExists(3));
 		$this->assertTrue($this->_objectRecordSet->offsetExists(4));
-		$this->assertTrue(isset($this->_objectRecordSet[3]));
+		$this->assertArrayHasKey(3, $this->_objectRecordSet);
 	}
 
 	public function testOffsetGet() {
@@ -195,14 +199,14 @@ class RecordSetTest extends \lithium\test\Unit {
 	}
 
 	public function testOffsetSet() {
-		$this->assertEqual(0, count($this->_recordSet->get('_data')));
+		$this->assertCount(0, $this->_recordSet->get('_data'));
 		$this->_recordSet[5] = $expected = array('id' => 5, 'data' => 'data5');
 		$this->assertEqual($expected, $this->_recordSet[5]->to('array'));
-		$this->assertEqual(5, count($this->_recordSet->get('_data')));
+		$this->assertCount(5, $this->_recordSet->get('_data'));
 
 		$this->_recordSet[] = $expected = array('id' => 6, 'data' => 'data6');
 		$this->assertEqual($expected, $this->_recordSet[6]->to('array'));
-		$this->assertEqual(6, count($this->_recordSet->get('_data')));
+		$this->assertCount(6, $this->_recordSet->get('_data'));
 
 		$this->_objectRecordSet[5] = $expected = new MockPostObject(array(
 			'id' => 5, 'data' => 'data5'
@@ -211,12 +215,16 @@ class RecordSetTest extends \lithium\test\Unit {
 		$this->assertEqual($expected->id, $item->id);
 		$this->assertEqual($expected->data, $item->data);
 
-		$this->_objectRecordSet[] = $expected = new MockPostObject(array('id' => 6, 'data' => 'data6 new'));
+		$this->_objectRecordSet[] = $expected = new MockPostObject(array(
+			'id' => 6, 'data' => 'data6 new'
+		));
 		$item = $this->_objectRecordSet[6];
 		$this->assertEqual($expected->id, $item->id);
 		$this->assertEqual($expected->data, $item->data);
 
-		$this->_objectRecordSet[] = $expected = new MockPostObject(array('id' => 6, 'data' => 'data6 new2'));
+		$this->_objectRecordSet[] = $expected = new MockPostObject(array(
+			'id' => 6, 'data' => 'data6 new2'
+		));
 		$item = $this->_objectRecordSet[6];
 		$this->assertEqual($expected->id, $item->id);
 		$this->assertEqual($expected->data, $item->data);
@@ -233,7 +241,9 @@ class RecordSetTest extends \lithium\test\Unit {
 		);
 		$this->assertEqual($expected, $this->_recordSet->to('array'));
 
-		$this->_objectRecordSet[1] = new MockPostObject(array('id' => 1, 'data' => 'new data1'));
+		$this->_objectRecordSet[1] = new MockPostObject(array(
+			'id' => 1, 'data' => 'new data1'
+		));
 
 		$result = $this->_objectRecordSet[1];
 		$this->assertEqual(1, $result->id);
@@ -297,7 +307,6 @@ class RecordSetTest extends \lithium\test\Unit {
 		$this->assertEqual($this->_records[1], $this->_recordSet->next()->to('array'));
 		$this->assertEqual($this->_records[1], $this->_recordSet->current()->to('array'));
 
-
 		$this->assertEqual($this->_records[0], $this->_recordSet->rewind()->to('array'));
 		$this->assertEqual($this->_records[1], $this->_recordSet->next()->to('array'));
 		$this->assertEqual($this->_records[1], $this->_recordSet->current()->to('array'));
@@ -317,7 +326,6 @@ class RecordSetTest extends \lithium\test\Unit {
 		$result = $this->_objectRecordSet->current();
 		$this->assertEqual($this->_objectRecordSet[2]->id, $result->id);
 		$this->assertEqual($this->_objectRecordSet[2]->data, $result->data);
-
 
 		$result = $this->_objectRecordSet->rewind();
 		$this->assertEqual($this->_objectRecordSet[1]->id, $result->id);
@@ -405,8 +413,8 @@ class RecordSetTest extends \lithium\test\Unit {
 		);
 		$this->assertEqual($expected, $this->_recordSet->to('array'));
 
-		$expected = '{"1":{"id":1,"data":"data1"},"2":{"id":2,"data":"data2"},'
-			. '"3":{"id":3,"data":"data3"},"4":{"id":4,"data":"data4"}}';
+		$expected = '{"1":{"id":1,"data":"data1"},"2":{"id":2,"data":"data2"},';
+		$expected .= '"3":{"id":3,"data":"data3"},"4":{"id":4,"data":"data4"}}';
 		$this->assertEqual($expected, $this->_recordSet->to('json'));
 	}
 
@@ -512,7 +520,7 @@ class RecordSetTest extends \lithium\test\Unit {
 			)
 		);
 		$posts = new MockRecordSet(array('data' => $expected));
-		$this->assertEqual(3, count($posts->get('_data')));
+		$this->assertCount(3, $posts->get('_data'));
 
 		$this->assertEqual($expected['post1'], $posts->first());
 		$this->assertEqual($expected['post1'], $posts->current());
@@ -529,7 +537,7 @@ class RecordSetTest extends \lithium\test\Unit {
 
 		$posts = new MockRecordSet();
 		$posts->set($expected);
-		$this->assertEqual(3, count($posts->get('_data')));
+		$this->assertCount(3, $posts->get('_data'));
 
 		$this->assertEqual($expected['post1'], $posts->first());
 		$this->assertEqual($expected['post1'], $posts->current());
@@ -620,7 +628,6 @@ class RecordSetTest extends \lithium\test\Unit {
 		}
 		$this->assertEqual(4, $i);
 
-
 		$records = array(
 			array(false),
 			array('id' => 1, 'data' => 'data1'),
@@ -651,7 +658,7 @@ class RecordSetTest extends \lithium\test\Unit {
 		$cpt = 0;
 		foreach ($recordSet as $i => $word) {
 			$array = $word->to('array');
-			if ($array['data'] == 'delete') {
+			if ($array['data'] === 'delete') {
 				unset($recordSet[$i]);
 			}
 			$cpt++;
@@ -678,12 +685,12 @@ class RecordSetTest extends \lithium\test\Unit {
 
 		foreach ($recordSet as $i => $word) {
 			$array = $word->to('array');
-			if ($array['data'] == 'delete') {
+			if ($array['data'] === 'delete') {
 				unset($recordSet[$i]);
 			}
 		}
 
-		$this->assertEqual(3, count($recordSet));
+		$this->assertCount(3, $recordSet);
 
 		$expected = array(
 			2 => array('id' => 2, 'data' => 'data2'),

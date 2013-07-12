@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -23,7 +23,7 @@ class MessageTest extends \lithium\test\Unit {
 		Catalog::config(array(
 			'runtime' => array('adapter' => new Memory())
 		));
-		$data = function($n) { return $n == 1 ? 0 : 1; };
+		$data = function($n) { return $n === 1 ? 0 : 1; };
 		Catalog::write('runtime', 'message.pluralRule', 'root', $data);
 
 		$this->_backup['environment'] = Environment::get('test');
@@ -147,7 +147,7 @@ class MessageTest extends \lithium\test\Unit {
 		);
 		Catalog::write('runtime', 'message', 'de', $data, array('scope' => 'test'));
 
-		$data = function($n) { return $n == 1 ? 0 : 1; };
+		$data = function($n) { return $n === 1 ? 0 : 1; };
 		Catalog::write('runtime', 'message.pluralRule', 'root', $data, array(
 			'scope' => 'test'
 		));
@@ -291,7 +291,7 @@ class MessageTest extends \lithium\test\Unit {
 		$data = array('catalog' => 'Katalog');
 		Catalog::write('runtime', 'message', 'de', $data, array('scope' => 'foo'));
 
-		$this->assertFalse(Message::cache());
+		$this->assertEmpty(Message::cache());
 
 		$result = Message::translate('catalog', array('locale' => 'de', 'scope' => 'foo'));
 		$this->assertEqual('Katalog', $result);
@@ -300,7 +300,7 @@ class MessageTest extends \lithium\test\Unit {
 		$this->assertEqual('Katalog', $cache['foo']['de']['catalog']);
 
 		Message::cache(false);
-		$this->assertFalse(Message::cache());
+		$this->assertEmpty(Message::cache());
 
 		Message::cache(array('foo' => array('de' => array('catalog' => '<Katalog>'))));
 		$result = Message::translate('catalog', array('locale' => 'de', 'scope' => 'foo'));

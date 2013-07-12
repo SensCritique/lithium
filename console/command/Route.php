@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 namespace lithium\console\command;
@@ -84,8 +84,8 @@ class Route extends \lithium\console\Command {
 	 *
 	 * @return void
 	 */
-	public function all() {
-		$routes = Router::get();
+	public function all($scope = true) {
+		$routes = Router::get(null, true);
 		$columns = array(array('Template', 'Params'), array('--------', '------'));
 
 		foreach ($routes As $route) {

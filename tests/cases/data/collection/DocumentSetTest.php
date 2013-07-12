@@ -2,13 +2,13 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\data\collection;
 
-use MongoId;
+use lithium\data\Connections;
 use lithium\data\source\MongoDb;
 use lithium\data\source\mongo_db\Schema;
 use lithium\data\entity\Document;
@@ -23,13 +23,15 @@ class DocumentSetTest extends \lithium\test\Unit {
 	protected $_model = 'lithium\tests\mocks\data\model\MockDocumentPost';
 
 	public function setUp() {
-		MockDocumentPost::config(array('connection' => 'mongo'));
-		MockDocumentPost::$connection = new MongoDb(array('autoConnect' => false));
-		MockDocumentPost::$connection->connection = new MockMongoConnection();
+		$connection = new MongoDb(array('autoConnect' => false));
+		$connection->connection = new MockMongoConnection();
+		Connections::add('mockconn', array('object' => $connection));
+		MockDocumentPost::config(array('meta' => array('connection' => 'mockconn')));
 	}
 
 	public function tearDown() {
-		MockDocumentPost::$connection = null;
+		Connections::remove('mockconn');
+		MockDocumentPost::reset();
 	}
 
 	public function testInitialCasting() {
@@ -46,7 +48,7 @@ class DocumentSetTest extends \lithium\test\Unit {
 		));
 
 		foreach ($array as $value) {
-			$this->assertTrue(is_int($value));
+			$this->assertInternalType('int', $value);
 		}
 	}
 
@@ -70,20 +72,21 @@ class DocumentSetTest extends \lithium\test\Unit {
 				array(
 					'_id' => '4cb4ab6d7addf98506010003',
 					'body' => 'body2',
-					'foo' =>  (object) array('bar' => '2')
+					'foo' => (object) array('bar' => '2')
 				),
 				array(
 					'_id' => '4cb4ab6d7addf98506010004',
 					'body' => 'body3',
 					'foo' => (object) array('bar' => '3')
 				)
-		)));
+			)
+		));
 
 		foreach ($array as $document) {
-			$this->assertTrue($document->_id instanceof MongoId);
-			$this->assertTrue(is_string($document->body));
-			$this->assertTrue(is_object($document->foo));
-			$this->assertTrue(is_string($document->foo->bar));
+			$this->assertInstanceOf('MongoId', $document->_id);
+			$this->assertInternalType('string', $document->body);
+			$this->assertInternalType('object', $document->foo);
+			$this->assertInternalType('string', $document->foo->bar);
 		}
 
 		$array = new DocumentSet(compact('model', 'schema') + array(
@@ -103,13 +106,14 @@ class DocumentSetTest extends \lithium\test\Unit {
 					'body' => 'body3',
 					'foo' => array('bar' => '3')
 				)
-		)));
+			)
+		));
 
 		foreach ($array as $document) {
-			$this->assertTrue($document->_id instanceof MongoId);
-			$this->assertTrue(is_string($document->body));
-			$this->assertTrue(is_object($document->foo));
-			$this->assertTrue(is_int($document->foo->bar));
+			$this->assertInstanceOf('MongoId', $document->_id);
+			$this->assertInternalType('string', $document->body);
+			$this->assertInternalType('object', $document->foo);
+			$this->assertInternalType('int', $document->foo->bar);
 		}
 
 	}
@@ -142,7 +146,7 @@ class DocumentSetTest extends \lithium\test\Unit {
 		$this->assertIdentical($data, $doc->data());
 
 		foreach ($doc as $i => $word) {
-			if ($word == 'Delete me') {
+			if ($word === 'Delete me') {
 				unset($doc[$i]);
 			}
 		}
@@ -153,7 +157,7 @@ class DocumentSetTest extends \lithium\test\Unit {
 		$doc = new DocumentSet(compact('data'));
 
 		foreach ($doc as $i => $word) {
-			if ($word == 'Delete me') {
+			if ($word === 'Delete me') {
 				unset($doc[$i]);
 			}
 		}
@@ -170,10 +174,10 @@ class DocumentSetTest extends \lithium\test\Unit {
 			'data' => array($first, $second, $third)
 		));
 
-		$this->assertTrue(is_object($doc[0]));
-		$this->assertTrue(is_object($doc[1]));
-		$this->assertTrue(is_object($doc[2]));
-		$this->assertEqual(3, count($doc));
+		$this->assertInternalType('object', $doc[0]);
+		$this->assertInternalType('object', $doc[1]);
+		$this->assertInternalType('object', $doc[2]);
+		$this->assertCount(3, $doc);
 	}
 
 	public function testOffsetSet() {
@@ -189,11 +193,10 @@ class DocumentSetTest extends \lithium\test\Unit {
 		$resource = new MockResult();
 
 		$doc = new DocumentSet(array('model' => $this->_model, 'result' => $resource));
-		$model = $this->_model;
 
 		$result = $doc->rewind();
-		$this->assertTrue($result instanceof Document);
-		$this->assertTrue(is_object($result['_id']));
+		$this->assertInstanceOf('lithium\data\entity\Document', $result);
+		$this->assertInternalType('object', $result['_id']);
 
 		$expected = array('_id' => '4c8f86167675abfabdbf0300', 'title' => 'bar');
 		$this->assertEqual($expected, $result->data());
@@ -211,7 +214,6 @@ class DocumentSetTest extends \lithium\test\Unit {
 	public function testOffsetGetBackwards() {
 		$resource = new MockResult();
 		$doc = new DocumentSet(array('model' => $this->_model, 'result' => $resource));
-		$model = $this->_model;
 
 		$expected = array('_id' => '6c8f86167675abfabdbf0302', 'title' => 'dib');
 		$this->assertEqual($expected, $doc['6c8f86167675abfabdbf0302']->data());
@@ -256,12 +258,10 @@ class DocumentSetTest extends \lithium\test\Unit {
 		$resource = new MockResult();
 		$doc = new DocumentSet(array('model' => $this->_model, 'result' => $resource));
 		$this->assertEqual(array(
-				0 => '4c8f86167675abfabdbf0300',
-				1 => '5c8f86167675abfabdbf0301',
-				2 => '6c8f86167675abfabdbf0302'
-			),
-			$doc->keys()
-		);
+			0 => '4c8f86167675abfabdbf0300',
+			1 => '5c8f86167675abfabdbf0301',
+			2 => '6c8f86167675abfabdbf0302'
+		), $doc->keys());
 	}
 
 	public function testTo() {
@@ -328,6 +328,50 @@ class DocumentSetTest extends \lithium\test\Unit {
 		$doc = new Document(compact('model', 'schema', 'data'));
 		$this->assertEqual($doc, $doc->foo->parent());
 		$this->assertEqual($expected, $doc->foo[0]->data());
+	}
+
+	public function testHandlers() {
+		$model = $this->_model;
+		$schema = new Schema(array('fields' => array(
+			'_id' => array('type' => 'id'),
+			'date' => array('type' => 'date')
+		)));
+		$handlers = array(
+			'MongoId' => function($value) { return substr((string) $value, -1); },
+			'MongoDate' => function($value) { return date('d/m/Y H:i', $value->sec); }
+		);
+		$array = new DocumentSet(compact('model', 'schema', 'handlers') + array(
+			'data' => array(
+				array(
+					'_id' => '4cb4ab6d7addf98506010002',
+					'date' => '2013-06-06 13:00:00'
+				),
+				array(
+					'_id' => '4cb4ab6d7addf98506010003',
+					'date' => '2013-06-06 12:00:00'
+				),
+				array(
+					'_id' => '4cb4ab6d7addf98506010004',
+					'date' => '2013-06-06 11:00:00'
+				)
+			)
+		));
+
+		$expected = array(
+			array(
+				'_id' => '2',
+				'date' => '06/06/2013 13:00'
+			),
+			array(
+				'_id' => '3',
+				'date' => '06/06/2013 12:00'
+			),
+			array (
+				'_id' => '4',
+				'date' => '06/06/2013 11:00'
+			)
+		);
+		$this->assertIdentical($expected, $array->to('array', array('indexed' => false)));
 	}
 }
 

@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -13,6 +13,7 @@ use lithium\util\String;
 use lithium\util\collection\Filters;
 use lithium\core\ConfigException;
 use lithium\core\ClassNotFoundException;
+use Closure;
 
 /**
  * Manages all aspects of class and file location, naming and mapping. Implements auto-loading for
@@ -277,6 +278,7 @@ class Libraries {
 	 */
 	public static function add($name, array $config = array()) {
 		$defaults = array(
+			'name' => $name,
 			'path' => null,
 			'prefix' => $name . "\\",
 			'suffix' => '.php',
@@ -398,7 +400,6 @@ class Libraries {
 	 *
 	 * @param mixed $name A string or array of library names indicating the libraries you wish to
 	 *        remove, i.e. `'app'` or `'lithium'`. This can also be used to unload plugins by  name.
-	 * @return void
 	 */
 	public static function remove($name) {
 		foreach ((array) $name as $library) {
@@ -418,7 +419,6 @@ class Libraries {
 	 * @param mixed $library The name of a library added to the application with `Libraries::add()`,
 	 *              or `true` to search all libraries.
 	 * @param array $options The options this method accepts:
-	 *
 	 *              - `'path'` _string_: A physical filesystem path relative to the directory of the
 	 *                library being searched. If provided, only the classes or namespaces within
 	 *                this path will be returned.
@@ -456,7 +456,7 @@ class Libraries {
 		$options += $defaults;
 		$libs = array();
 
-		if ($options['namespaces'] && $options['filter'] == $defaults['filter']) {
+		if ($options['namespaces'] && $options['filter'] === $defaults['filter']) {
 			$options['format'] = function($class, $config) use ($format, $defaults) {
 				if (is_dir($class)) {
 					return $format($class, $config);
@@ -616,9 +616,9 @@ class Libraries {
 		list(, $relativePath, $pharPath) = $pathComponents;
 
 		$pharPath = implode('/', array_reduce(explode('/', $pharPath), function ($parts, $value) {
-			if ($value == '..') {
+			if ($value === '..') {
 				array_pop($parts);
-			} elseif ($value != '.') {
+			} elseif ($value !== '.') {
 				$parts[] = $value;
 			}
 			return $parts;
@@ -714,7 +714,7 @@ class Libraries {
 	 *
 	 * @see lithium\util\collection\Filters
 	 * @param string $method The name of the method to apply the closure to.
-	 * @param closure $filter The closure that is used to filter the method.
+	 * @param Closure $filter The closure that is used to filter the method.
 	 * @return void
 	 */
 	public static function applyFilter($method, $filter = null) {
@@ -979,8 +979,8 @@ class Libraries {
 		$suffix = $options['namespaces'] ? '' : $config['suffix'];
 		$suffix = ($options['suffix'] === null) ? $suffix : $options['suffix'];
 
-		$dFlags = GLOB_ONLYDIR;
-		$libs = (array) glob($path . $suffix, $options['namespaces'] ? $dFlags : 0);
+		$dFlags = GLOB_ONLYDIR & GLOB_BRACE;
+		$libs = (array) glob($path . $suffix, $options['namespaces'] ? $dFlags : GLOB_BRACE);
 
 		if ($options['recursive']) {
 			list($current, $match) = explode('/*', $path, 2);

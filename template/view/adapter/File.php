@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -77,6 +77,12 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 		'media'  => 'lithium\net\http\Media'
 	);
 
+	/**
+	 * Sets up defaults and passes to parent to setup class.
+	 *
+	 * @param  array $config Configuration options.
+	 * @return void
+	 */
 	public function __construct(array $config = array()) {
 		$defaults = array(
 			'classes' => array(),
@@ -102,6 +108,7 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 
 		$this->_context = $options['context'] + $this->_context;
 		$this->_data = (array) $data + $this->_vars;
+		$this->_options = $options;
 		$template__ = $template;
 		unset($options, $template, $defaults, $data);
 
@@ -136,23 +143,70 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 	}
 
 	/**
-	 * Allows checking to see if a value is set in template data, i.e. `$this['foo']` in templates.
+	 * Allows checking to see if a value is set in template data.
 	 *
-	 * @param string $offset The key / variable name to check.
+	 * Part of `ArrayAccess`.
+	 *
+	 * {{{
+	 * isset($file['bar']);
+	 * $file->offsetExists('bar');
+	 * }}}
+	 *
+	 * @param  string  $offset Key / variable name to check.
 	 * @return boolean Returns `true` if the value is set, otherwise `false`.
 	 */
 	public function offsetExists($offset) {
 		return array_key_exists($offset, $this->_data);
 	}
 
+	/**
+	 * Gets the offset, or null in the template data.
+	 *
+	 * Part of `ArrayAccess`.
+	 *
+	 * {{{
+	 * $file['bar'];
+	 * $file->offsetGet('bar');
+	 * }}}
+	 *
+	 * @param  string $offset Key / variable name to check.
+	 * @return mixed
+	 */
 	public function offsetGet($offset) {
 		return isset($this->_data[$offset]) ? $this->_data[$offset] : null;
 	}
 
+	/**
+	 * Sets the offset with the given value.
+	 *
+	 * Part of `ArrayAccess`.
+	 *
+	 * {{{
+	 * $file['bar'] = 'baz';
+	 * $file->offsetSet('bar', 'baz');
+	 * }}}
+	 *
+	 * @param  string $offset Key / variable name to check.
+	 * @param  mixed  $value  Value you wish to set to `$offset`.
+	 * @return void
+	 */
 	public function offsetSet($offset, $value) {
 		$this->_data[$offset] = $value;
 	}
 
+	/**
+	 * Unsets the given offset.
+	 *
+	 * Part of `ArrayAccess`.
+	 *
+	 * {{{
+	 * unset($file['bar']);
+	 * $file->offsetUnset('bar');
+	 * }}}
+	 *
+	 * @param  string $offset Key / variable name to check.
+	 * @return void
+	 */
 	public function offsetUnset($offset) {
 		unset($this->_data[$offset]);
 	}

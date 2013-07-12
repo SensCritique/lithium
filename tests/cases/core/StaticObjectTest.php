@@ -2,13 +2,12 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\core;
 
-use lithium\core\StaticObject;
 use lithium\tests\mocks\core\MockRequest;
 use lithium\tests\mocks\core\MockStaticInstantiator;
 
@@ -162,6 +161,63 @@ class StaticObjectTest extends \lithium\test\Unit {
 		$this->expectException('/^Invalid class lookup/');
 		MockStaticInstantiator::instance(false);
 	}
+
+	public function testResetMethodFilter() {
+		$class = 'lithium\tests\mocks\core\MockStaticMethodFiltering';
+		$class::applyFilter(false);
+		$class::applyFilter('method2', function($self, $params, $chain) {
+			return false;
+		});
+
+		$this->assertFalse($class::method2());
+
+		$class::applyFilter('method2', false);
+
+		$this->assertNotIdentical($class::method2(), false);
+	}
+
+	public function testResetMultipleFilters() {
+		$class = 'lithium\tests\mocks\core\MockStaticMethodFiltering';
+		$class::applyFilter(false);
+		$class::applyFilter(array('method2', 'manual'), function($self, $params, $chain) {
+			return false;
+		});
+
+		$this->assertFalse($class::method2());
+		$this->assertFalse($class::manual(array()));
+
+		$class::applyFilter('method2', false);
+
+		$this->assertNotIdentical($class::method2(), false);
+		$this->assertFalse($class::manual(array()));
+	}
+
+	public function testResetClass() {
+		$class = 'lithium\tests\mocks\core\MockStaticMethodFiltering';
+		$class::applyFilter(false);
+		$class::applyFilter(array('method2', 'manual'), function($self, $params, $chain) {
+			return false;
+		});
+
+		$this->assertFalse($class::method2());
+		$this->assertFalse($class::manual(array()));
+
+		$class::applyFilter(false);
+
+		$this->assertNotIdentical($class::method2(), false);
+		$this->assertNotIdentical($class::manual(array()), false);
+	}
+
+	public function testRespondsTo() {
+		$this->assertTrue(MockStaticInstantiator::respondsTo('applyFilter'));
+		$this->assertFalse(MockStaticInstantiator::respondsTo('fooBarBaz'));
+	}
+
+	public function testRespondsToProtectedMethod() {
+		$this->assertFalse(MockStaticInstantiator::respondsTo('_foo'));
+		$this->assertTrue(MockStaticInstantiator::respondsTo('_foo', 1));
+	}
+
 }
 
 ?>

@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -11,13 +11,9 @@ namespace lithium\tests\mocks\data\model;
 use lithium\data\entity\Document;
 use lithium\data\collection\DocumentSet;
 
-class MockDocumentPost extends \lithium\tests\mocks\data\MockBase {
+class MockDocumentPost extends \lithium\data\Model {
 
 	protected $_meta = array('connection' => false, 'initialized' => true, 'key' => '_id');
-
-	protected static $_connection;
-
-	public static function __init() {}
 
 	public static function schema($field = null) {
 		$schema = parent::schema();
@@ -52,7 +48,7 @@ class MockDocumentPost extends \lithium\tests\mocks\data\MockBase {
 				));
 			break;
 			case 'all':
-			default :
+			default:
 				return new DocumentSet(array(
 					'data' => array(
 						array('_id' => 1, 'name' => 'One', 'content' => 'Lorem ipsum one'),

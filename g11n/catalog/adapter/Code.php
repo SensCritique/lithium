@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -41,8 +41,7 @@ class Code extends \lithium\g11n\catalog\Adapter {
 	/**
 	 * Initializer.  Checks if the configured path exists.
 	 *
-	 * @return void
-	 * @throws \Exception
+	 * @throws lithium\core\ConfigException
 	 */
 	protected function _init() {
 		parent::_init();
@@ -59,10 +58,10 @@ class Code extends \lithium\g11n\catalog\Adapter {
 	 * @param string $locale A locale identifier.
 	 * @param string $scope The scope for the current operation.
 	 * @return array Returns the message template. If the scope is not equal to the current scope
-	 * or `$category` is not `'messageTemplate'` null is returned.
+	 *         or `$category` is not `'messageTemplate'` null is returned.
 	 */
 	public function read($category, $locale, $scope) {
-		if ($scope != $this->_config['scope']) {
+		if ($scope !== $this->_config['scope']) {
 			return null;
 		}
 		$path = $this->_config['path'];
@@ -121,7 +120,7 @@ class Code extends \lithium\g11n\catalog\Adapter {
 		extract($defaults);
 		$data = array();
 
-		if (strpos($contents, '$t(') === false && strpos($contents, '$tn(') == false) {
+		if (strpos($contents, '$t(') === false && strpos($contents, '$tn(') === false) {
 			return $data;
 		}
 

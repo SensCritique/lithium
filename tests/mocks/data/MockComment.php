@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -12,11 +12,9 @@ use lithium\data\model\Query;
 use lithium\data\entity\Record;
 use lithium\data\collection\RecordSet;
 
-class MockComment extends \lithium\tests\mocks\data\MockBase {
+class MockComment extends \lithium\data\Model {
 
 	public $belongsTo = array('MockPost');
-
-	public static $connection = null;
 
 	protected $_meta = array('connection' => false, 'key' => 'comment_id');
 

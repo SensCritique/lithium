@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -18,8 +18,8 @@ class MockResponse extends \lithium\action\Response {
 		$this->headers = array();
 	}
 
-	protected function _writeHeader($header, $code = null) {
-		$this->testHeaders[] = $header;
+	protected function _writeHeaders($header, $code = null) {
+		$this->testHeaders = array_merge($this->testHeaders, (array) $header);
 	}
 }
 

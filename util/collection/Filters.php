@@ -2,11 +2,13 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\util\collection;
+
+use Closure;
 
 /**
  * The `Filters` class is the basis of Lithium's method filtering system: an efficient way to enable
@@ -117,7 +119,7 @@ class Filters extends \lithium\util\Collection {
 	 *               be applied. The class name specified in `$class` **must** extend
 	 *               `StaticObject`, or else statically implement the `applyFilter()` method.
 	 * @param string $method The method to which the filter will be applied.
-	 * @param closure $filter The filter to apply to the class method.
+	 * @param Closure $filter The filter to apply to the class method.
 	 * @return void
 	 */
 	public static function apply($class, $method, $filter) {
@@ -155,10 +157,9 @@ class Filters extends \lithium\util\Collection {
 	 * @param array $options The configuration options with which to create the filter chain.
 	 *        Mainly, these options allow the `Filters` object to be queried for details such as
 	 *        which class / method initiated it. Available keys:
-	 *
-	 *        -'class': The name of the class that initiated the filter chain.
-	 *        -'method': The name of the method that initiated the filter chain.
-	 *        -`'data'` _array_: An array of callable objects (usually closures) to be iterated
+	 *        - `'class'`: The name of the class that initiated the filter chain.
+	 *        - `'method'`: The name of the method that initiated the filter chain.
+	 *        - `'data'` _array_: An array of callable objects (usually closures) to be iterated
 	 *          through. By default, execution will be nested such that the first item will be
 	 *          executed first, and will be the last to return.
 	 * @return Returns the value returned by the first closure in `$options['data`]`.

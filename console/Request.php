@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -133,8 +133,8 @@ class Request extends \lithium\core\Object {
 	 *
 	 * @param string $key
 	 * @return mixed Returns the environment key related to the `$key` argument. If `$key` is equal
-	 * to null the result will be the entire environment array. If `$key` is set but not
-	 * available, `null` will be returned.
+	 *         to null the result will be the entire environment array. If `$key` is set but not
+	 *         available, `null` will be returned.
 	 */
 	public function env($key = null) {
 		if (!empty($this->_env[$key])) {

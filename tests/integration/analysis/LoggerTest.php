@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -28,17 +28,18 @@ class LoggerTest extends \lithium\test\Integration {
 		});
 
 		$config = array('default' => array(
-			'adapter' => 'File', 'timestamp' => false,	'format' => "{:message}\n"
+			'adapter' => 'File', 'timestamp' => false, 'format' => "{:message}\n"
 		));
 		Logger::config($config);
 
 		$result = Logger::write('info', 'Original Message');
-		$this->assertTrue(file_exists($base . '/info.log'));
+		$this->assertFileExists($base . '/info.log');
 
 		$expected = "Filtered Message\n";
 		$result = file_get_contents($base . '/info.log');
 		$this->assertEqual($expected, $result);
 
+		Filters::apply('lithium\analysis\Logger', 'write', false);
 		unlink($base . '/info.log');
 	}
 }

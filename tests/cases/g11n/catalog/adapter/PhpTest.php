@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -79,7 +79,8 @@ EOD;
 				'flags' => array(),
 				'comments' => array(),
 				'occurrences' => array()
-		));
+			)
+		);
 		$this->assertEqual($expected, $result);
 	}
 
@@ -111,7 +112,8 @@ EOD;
 				'flags' => array(),
 				'comments' => array(),
 				'occurrences' => array()
-		));
+			)
+		);
 		$this->assertEqual($expected, $result);
 	}
 
@@ -128,7 +130,7 @@ EOD;
 		file_put_contents("{$this->_path}/fr/message/li3_docs.php", $data);
 
 		$result = $this->adapter->read('message', 'fr', null);
-		$this->assertFalse($result);
+		$this->assertEmpty($result);
 
 		$result = $this->adapter->read('message', 'fr', 'li3_docs');
 		$expected = array(
@@ -139,7 +141,8 @@ EOD;
 				'flags' => array(),
 				'comments' => array(),
 				'occurrences' => array()
-		));
+			)
+		);
 		$this->assertEqual($expected, $result);
 	}
 
@@ -164,7 +167,8 @@ EOD;
 				'flags' => array(),
 				'comments' => array(),
 				'occurrences' => array()
-		));
+			)
+		);
 		$this->assertEqual($expected, $result);
 
 	}
@@ -193,7 +197,7 @@ EOD;
 		);
 		$this->assertEqual($expected, $result['politics']);
 
-		$this->assertTrue(is_callable($result['plural']['translated']));
+		$this->assertInternalType('callable', $result['plural']['translated']);
 
 		$expected = 123;
 		$result = $result['plural']['translated']();

@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -13,7 +13,8 @@ use lithium\util\Set;
 class Exporter extends \lithium\core\StaticObject {
 
 	protected static $_classes = array(
-		'set' => 'lithium\data\collection\DocumentSet'
+		'set' => 'lithium\data\collection\DocumentSet',
+		'entity' => 'lithium\data\collection\Document',
 	);
 
 	protected static $_commands = array(
@@ -108,7 +109,7 @@ class Exporter extends \lithium\core\StaticObject {
 
 		foreach ($update as $key => $value) {
 			$original = $export['data'];
-			$isArray = is_object($value) && get_class($value) == static::$_classes['set'];
+			$isArray = is_object($value) && $value instanceof static::$_classes['set'];
 
 			$options = array(
 				'indexed' => null,
@@ -121,11 +122,15 @@ class Exporter extends \lithium\core\StaticObject {
 			if ($isArray) {
 				$newValue = $value->to('array', $options);
 				$originalValue = null;
-				if (isset($original[$key])) {
+				$shouldConvert = (isset($original[$key]) && (
+					$original[$key] instanceof static::$_classes['set'] ||
+					$original[$key] instanceof static::$_classes['entity']
+				));
+				if ($shouldConvert) {
 					$originalValue = $original[$key]->to('array', $options);
 				}
 				if ($newValue !== $originalValue) {
-					$value = $value->to('array', $options);
+					$value = $newValue;
 				}
 			}
 			$result = static::_append($result, "{$path}{$key}", $value, 'update');
@@ -167,14 +172,14 @@ class Exporter extends \lithium\core\StaticObject {
 		$options = array('finalize' => false);
 
 		if (!is_object($value) || !method_exists($value, 'export')) {
-			$changes[$change][$key] = ($change == 'update') ? $value : true;
+			$changes[$change][$key] = ($change === 'update') ? $value : true;
 			return $changes;
 		}
 		if (!$value->exists()) {
 			$changes[$change][$key] = static::_create($value->export(), $options);
 			return $changes;
 		}
-		if ($change == 'update') {
+		if ($change === 'update') {
 			$export = compact('key') + $value->export();
 			return Set::merge($changes, static::_update($export));
 		}

@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright	 Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright	 Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license	   http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -112,8 +112,7 @@ EOD;
 		$this->assertPattern($expected, $result);
 
 		$file = "{$this->_path}/destination/message_default.pot";
-		$result = file_exists($file);
-		$this->assertTrue($result);
+		$this->assertFileExists($file);
 
 		$result = file_get_contents($file);
 		$expected = '/msgid "Apples are green\."/';
@@ -123,7 +122,7 @@ EOD;
 		$this->assertPattern($expected, $result);
 
 		$result = $this->command->response->error;
-		$this->assertFalse($result);
+		$this->assertEmpty($result);
 	}
 }
 

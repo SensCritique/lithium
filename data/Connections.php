@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -106,6 +106,15 @@ class Connections extends \lithium\core\Adaptable {
 			'password' => ''
 		);
 		return static::$_configurations[$name] = $config + $defaults;
+	}
+
+	/**
+	 * Removing a configuration.
+	 *
+	 * @param string $name The name by which this connection is referenced.
+	 */
+	public static function remove($name) {
+		unset(static::$_configurations[$name]);
 	}
 
 	/**

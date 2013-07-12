@@ -16,7 +16,7 @@ use lithium\analysis\Inspector;
  * The `Debugger` class provides basic facilities for generating and rendering meta-data about the
  * state of an application in its current context.
  */
-class Debugger extends \lithium\core\Object {
+class Debugger {
 
 	/**
 	 * Used for temporary closure caching.
@@ -87,9 +87,9 @@ class Debugger extends \lithium\core\Object {
 			}
 			$trace['functionRef'] = $function;
 
-			if ($options['format'] == 'points' && $trace['file'] != '[internal]') {
+			if ($options['format'] === 'points' && $trace['file'] !== '[internal]') {
 				$back[] = array('file' => $trace['file'], 'line' => $trace['line']);
-			} elseif (is_string($options['format']) && $options['format'] != 'array') {
+			} elseif (is_string($options['format']) && $options['format'] !== 'array') {
 				$back[] = String::insert($options['format'], array_map(
 					function($data) { return is_object($data) ? get_class($data) : $data; },
 					$trace
@@ -108,7 +108,7 @@ class Debugger extends \lithium\core\Object {
 			}
 		}
 
-		if ($options['format'] == 'array' || $options['format'] == 'points') {
+		if ($options['format'] === 'array' || $options['format'] === 'points') {
 			return $back;
 		}
 		return join("\n", $back);
@@ -136,6 +136,7 @@ class Debugger extends \lithium\core\Object {
 	 *
 	 * @param mixed $reference File or class name to inspect.
 	 * @param integer $callLine Line number of class reference.
+	 * @return mixed Returns the line number where the method called is defined.
 	 */
 	protected static function _definition($reference, $callLine) {
 		if (file_exists($reference)) {
@@ -171,6 +172,14 @@ class Debugger extends \lithium\core\Object {
 		}
 	}
 
+	/**
+	 * Helper method for caching closure function references to help the process of building the
+	 * stack trace.
+	 * @param  array $frame Backtrace information.
+	 * @param  Closure $function The method related to $frame information.
+	 * @return string Returns either the cached or the fetched closure function reference while
+	 *                writing its reference to the cache array `$_closureCache`.
+	 */
 	protected static function _closureDef($frame, $function) {
 		$reference = '::';
 		$frame += array('file' => '??', 'line' => '??');

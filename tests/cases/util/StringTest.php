@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -40,7 +40,7 @@ class StringTest extends \lithium\test\Unit {
 		for ($i = 0; $i < $count; $i++) {
 			$result = String::uuid();
 			$match = preg_match($pattern, $result);
-			$this->assertTrue($match);
+			$this->assertNotEmpty($match);
 			$this->assertFalse(in_array($result, $check));
 			$check[] = $result;
 		}
@@ -403,7 +403,6 @@ class StringTest extends \lithium\test\Unit {
 
 	/**
 	 * Tests hash generation using `String::hash()`.
-	 * @return string
 	 */
 	public function testHash() {
 		$salt = 'Salt and pepper';

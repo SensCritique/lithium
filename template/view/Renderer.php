@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -133,6 +133,14 @@ abstract class Renderer extends \lithium\core\Object {
 	protected $_vars = array();
 
 	/**
+	 * Available options accepted by `template\View::render()`, used when rendering.
+	 *
+	 * @see lithium\template\View::render()
+	 * @var array
+	 */
+	protected $_options = array();
+
+	/**
 	 * Render the template with given data. Abstract; must be added to subclasses.
 	 *
 	 * @param string $template
@@ -154,6 +162,7 @@ abstract class Renderer extends \lithium\core\Object {
 	 * - `response`: The `Response` object associated with this renderer.
 	 * - `context`: An array of the current rendering context data, including `content`,
 	 *              `title`, `scripts`, `head` and `styles`.
+	 *
 	 * @param array $config
 	 */
 	public function __construct(array $config = array()) {
@@ -179,18 +188,18 @@ abstract class Renderer extends \lithium\core\Object {
 	protected function _init() {
 		parent::_init();
 
-		$request =& $this->_request;
-		$context =& $this->_context;
+		$req =& $this->_request;
+		$ctx =& $this->_context;
 		$classes =& $this->_classes;
 		$h = $this->_view ? $this->_view->outputFilters['h'] : null;
 
 		$this->_handlers += array(
-			'url' => function($url, $ref, array $options = array()) use (&$classes, &$request, $h) {
-				$url = $classes['router']::match($url ?: '', $request, $options);
+			'url' => function($url, $ref, array $options = array()) use (&$classes, &$req, $h) {
+				$url = $classes['router']::match($url ?: '', $req, $options);
 				return $h ? str_replace('&amp;', '&', $h($url)) : $url;
 			},
-			'path' => function($path, $ref, array $options = array()) use (&$classes, &$request) {
-				$defaults = array('base' => $request ? $request->env('base') : '');
+			'path' => function($path, $ref, array $options = array()) use (&$classes, &$req, $h) {
+				$defaults = array('base' => $req ? $req->env('base') : '');
 				$type = 'generic';
 
 				if (is_array($ref) && $ref[0] && $ref[1]) {
@@ -198,19 +207,20 @@ abstract class Renderer extends \lithium\core\Object {
 					list($class, $method) = explode('::', $methodRef);
 					$type = $helper->contentMap[$method];
 				}
-				return $classes['media']::asset($path, $type, $options + $defaults);
+				$path = $classes['media']::asset($path, $type, $options + $defaults);
+				return $h ? $h($path) : $path;
 			},
 			'options' => '_attributes',
 			'title'   => 'escape',
 			'value'   => 'escape',
-			'scripts' => function($scripts) use (&$context) {
-				return "\n\t" . join("\n\t", $context['scripts']) . "\n";
+			'scripts' => function($scripts) use (&$ctx) {
+				return "\n\t" . join("\n\t", $ctx['scripts']) . "\n";
 			},
-			'styles' => function($styles) use (&$context) {
-				return "\n\t" . join("\n\t", $context['styles']) . "\n";
+			'styles' => function($styles) use (&$ctx) {
+				return "\n\t" . join("\n\t", $ctx['styles']) . "\n";
 			},
-			'head' => function($head) use (&$context) {
-				return "\n\t" . join("\n\t", $context['head']) . "\n";
+			'head' => function($head) use (&$ctx) {
+				return "\n\t" . join("\n\t", $ctx['head']) . "\n";
 			}
 		);
 		unset($this->_config['view']);
@@ -287,6 +297,17 @@ abstract class Renderer extends \lithium\core\Object {
 			return $this->applyHandler(null, null, $method, $params[0], $params[1]);
 		}
 		return $this->applyHandler(null, null, $method, $this->_context[$method]);
+	}
+
+	/**
+	 * Custom check to determine if our given magic methods can be responded to.
+	 *
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
+	 */
+	public function respondsTo($method, $internal = false) {
+		return is_callable(array($this, $method), true);
 	}
 
 	/**
@@ -487,11 +508,11 @@ abstract class Renderer extends \lithium\core\Object {
 	 * @return string Returns a the rendered template content as a string.
 	 */
 	protected function _render($type, $template, array $data = array(), array $options = array()) {
-		if ($this->_request) {
-			$library = $this->_request->library;
-			$options += compact('library');
-		}
-		return $this->_view->render($type, $data + $this->_data, compact('template') + $options);
+		$context = $this->_options;
+		$options += $this->_options;
+		$result = $this->_view->render($type, $data + $this->_data, compact('template') + $options);
+		$this->_options = $context;
+		return $result;
 	}
 }
 

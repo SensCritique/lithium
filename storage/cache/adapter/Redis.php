@@ -2,13 +2,14 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\storage\cache\adapter;
 
 use Redis as RedisCore;
+use Closure;
 
 /**
  * A Redis (phpredis) cache adapter implementation.
@@ -44,7 +45,6 @@ use Redis as RedisCore;
  * @see lithium\storage\Cache::key()
  * @see lithium\storage\Cache::adapter()
  * @link https://github.com/nicolasff/phpredis GitHub: PhpRedis Extension
- *
  */
 class Redis extends \lithium\core\Object {
 
@@ -121,6 +121,18 @@ class Redis extends \lithium\core\Object {
 	}
 
 	/**
+	 * Custom check to determine if our given magic methods can be responded to.
+	 *
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
+	 */
+	public function respondsTo($method, $internal = 0) {
+		$parentRespondsTo = parent::respondsTo($method, $internal);
+		return $parentRespondsTo || is_callable(array($this->connection, $method));
+	}
+
+	/**
 	 * Sets expiration time for cache keys
 	 *
 	 * @param string $key The key to uniquely identify the cached item
@@ -139,7 +151,7 @@ class Redis extends \lithium\core\Object {
 	 * @param mixed $value The value to be cached
 	 * @param null|string $expiry A strtotime() compatible cache time. If no expiry time is set,
 	 *        then the default cache expiration time set with the cache configuration will be used.
-	 * @return closure Function returning boolean `true` on successful write, `false` otherwise.
+	 * @return Closure Function returning boolean `true` on successful write, `false` otherwise.
 	 */
 	public function write($key, $value = null, $expiry = null) {
 		$connection =& $this->connection;
@@ -174,7 +186,7 @@ class Redis extends \lithium\core\Object {
 	 * Read value(s) from the cache
 	 *
 	 * @param string $key The key to uniquely identify the cached item
-	 * @return closure Function returning cached value if successful, `false` otherwise
+	 * @return Closure Function returning cached value if successful, `false` otherwise
 	 */
 	public function read($key) {
 		$connection =& $this->connection;
@@ -193,7 +205,7 @@ class Redis extends \lithium\core\Object {
 	 * Delete value from the cache
 	 *
 	 * @param string $key The key to uniquely identify the cached item
-	 * @return closure Function returning boolean `true` on successful delete, `false` otherwise
+	 * @return Closure Function returning boolean `true` on successful delete, `false` otherwise
 	 */
 	public function delete($key) {
 		$connection =& $this->connection;
@@ -212,7 +224,7 @@ class Redis extends \lithium\core\Object {
 	 *
 	 * @param string $key Key of numeric cache item to decrement
 	 * @param integer $offset Offset to decrement - defaults to 1.
-	 * @return closure Function returning item's new value on successful decrement, else `false`
+	 * @return Closure Function returning item's new value on successful decrement, else `false`
 	 */
 	public function decrement($key, $offset = 1) {
 		$connection =& $this->connection;
@@ -231,7 +243,7 @@ class Redis extends \lithium\core\Object {
 	 *
 	 * @param string $key Key of numeric cache item to increment
 	 * @param integer $offset Offset to increment - defaults to 1.
-	 * @return closure Function returning item's new value on successful increment, else `false`
+	 * @return Closure Function returning item's new value on successful increment, else `false`
 	 */
 	public function increment($key, $offset = 1) {
 		$connection =& $this->connection;

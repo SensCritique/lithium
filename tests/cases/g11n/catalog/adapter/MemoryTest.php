@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -42,7 +42,7 @@ class MemoryTest extends \lithium\test\Unit {
 
 	public function testReadNonExistent() {
 		$result = $this->adapter->read('messageTemplate', 'root', null);
-		$this->assertFalse($result);
+		$this->assertEmpty($result);
 	}
 }
 

@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -67,6 +67,7 @@ class Service extends \lithium\core\Object {
 	/**
 	 * Initializes a new `Service` instance with the default HTTP request settings and
 	 * transport- and format-handling classes.
+	 *
 	 * @param array $config
 	 */
 	public function __construct(array $config = array()) {
@@ -113,6 +114,17 @@ class Service extends \lithium\core\Object {
 	public function __call($method, $params = array()) {
 		array_unshift($params, $method);
 		return $this->invokeMethod('send', $params);
+	}
+
+	/**
+	 * Custom check to determine if our given magic methods can be responded to.
+	 *
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
+	 */
+	public function respondsTo($method, $internal = false) {
+		return is_callable(array($this, $method), true);
 	}
 
 	/**

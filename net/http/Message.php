@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -29,7 +29,7 @@ class Message extends \lithium\net\Message {
 	public $version = '1.1';
 
 	/**
-	 * headers
+	 * HTTP headers
 	 *
 	 * @var array
 	 */
@@ -43,7 +43,7 @@ class Message extends \lithium\net\Message {
 	protected $_type = null;
 
 	/**
-	 * Classes used by `Request`.
+	 * Classes used by `Message` and its subclasses.
 	 *
 	 * @var array
 	 */
@@ -56,37 +56,32 @@ class Message extends \lithium\net\Message {
 	 * Adds config values to the public properties when a new object is created.
 	 *
 	 * @param array $config Configuration options : default value
-	 * - `scheme`: http
-	 * - `host`: localhost
-	 * - `port`: null
-	 * - `username`: null
-	 * - `password`: null
-	 * - `path`: null
-	 * - `version`: 1.1
-	 * - `headers`: array
-	 * - `body`: null
+	 *        - `'protocol'` _string_: null
+	 *        - `'version'` _string_: '1.1'
+	 *        - `'scheme'` _string_: 'http'
+	 *        - `'host'` _string_: 'localhost'
+	 *        - `'port'` _integer_: null
+	 *        - `'username'` _string_: null
+	 *        - `'password'` _string_: null
+	 *        - `'path'` _string_: null
+	 *        - `'headers'` _array_: array()
+	 *        - `'body'` _mixed_: null
 	 */
 	public function __construct(array $config = array()) {
 		$defaults = array(
-			'scheme' => 'http',
-			'host' => 'localhost',
-			'port' => null,
-			'username' => null,
-			'password' => null,
-			'path' => null,
-			'query' => array(),
-			'fragment' => null,
 			'protocol' => null,
 			'version' => '1.1',
-			'headers' => array(),
-			'body' => null,
-			'auth' => null
+			'scheme' => 'http',
+			'host' => 'localhost',
+			'headers' => array()
 		);
 		$config += $defaults;
-		parent::__construct($config);
+
 		foreach (array_intersect_key(array_filter($config), $defaults) as $key => $value) {
 			$this->{$key} = $value;
 		}
+		parent::__construct($config);
+
 		if (strpos($this->host, '/') !== false) {
 			list($this->host, $this->path) = explode('/', $this->host, 2);
 		}
@@ -97,39 +92,57 @@ class Message extends \lithium\net\Message {
 	/**
 	 * Add a header to rendered output, or return a single header or full header list.
 	 *
-	 * @param string $key
-	 * @param string $value
-	 * @return array
+	 * @param string $key A header name, a full header line (`'Key: Value'`), or an array of headers
+	 *        to set in `key => value` form.
+	 * @param string $value A value to set if `$key` is a string. If `null`, returns the value of the
+	 *        header corresponding to `$key`. If `false`, it unsets the header corresponding to `$key`.
+	 * @param boolean $replace Whether to override or add alongside any existing header with the same
+	 *        name.
+	 * @return mixed The value of a single header, or an array of compiled headers in the form
+	 *         `'Key: Value'`.
 	 */
-	public function headers($key = null, $value = null) {
-		if (is_string($key) && strpos($key, ':') === false) {
-			if ($value === null) {
+	public function headers($key = null, $value = null, $replace = true) {
+		if (!is_string($key)) {
+			$replace = ($value === false) ? $value : $replace;
+
+			foreach ((array) $key as $header => $value) {
+				if (is_string($header)) {
+					$this->headers($header, $value, $replace);
+					continue;
+				}
+				$this->headers($value, null, $replace);
+			}
+		} elseif ($key) {
+			if (strpos($key, ':') !== false) {
+				if (preg_match('/(.*?):(.+)/', $key, $match)) {
+					$this->headers($match[1], trim($match[2]), $replace);
+				}
+			} elseif ($value === null) {
 				return isset($this->headers[$key]) ? $this->headers[$key] : null;
-			}
-			if ($value === false) {
+			} elseif ($value === false) {
 				unset($this->headers[$key]);
-				return $this->headers;
-			}
-		}
-		foreach (($value ? array($key => $value) : (array) $key) as $header => $value) {
-			if (!is_string($header)) {
-				if (preg_match('/(.*?):(.+)/', $value, $match)) {
-					$this->headers[$match[1]] = trim($match[2]);
+			} elseif (!$replace && isset($this->headers[$key]) && $value != $this->headers[$key]) {
+				$this->headers[$key] = (array) $this->headers[$key];
+
+				if (is_string($value)) {
+					$this->headers[$key][] = $value;
+				} else {
+					$this->headers[$key] = array_merge($this->headers[$key], $value);
 				}
 			} else {
-				$this->headers[$header] = $value;
+				$this->headers[$key] = $value;
 			}
 		}
 		$headers = array();
 
 		foreach ($this->headers as $key => $value) {
-			if (is_array($value)) {
-				foreach ($value as $val) {
-					$headers[] = "{$key}: {$val}";
-				}
+			if (is_scalar($value)) {
+				$headers[] = "{$key}: {$value}";
 				continue;
 			}
-			$headers[] = "{$key}: {$value}";
+			foreach ($value as $val) {
+				$headers[] = "{$key}: {$val}";
+			}
 		}
 		return $headers;
 	}
@@ -166,19 +179,22 @@ class Message extends \lithium\net\Message {
 		}
 		if (is_string($data)) {
 			$type = $data;
-		} else if (!empty($data['content'])) {
-			$header = is_array($data['content']) ? reset($data['content']) : $data['content'];
+		} elseif (!empty($data['content'])) {
+			$header = is_string($data['content']) ? $data['content'] : reset($data['content']);
 		}
 		$this->headers('Content-Type', $header);
 		return ($this->_type = $type);
 	}
 
 	/**
-	 * Add body parts.
+	 * Add data to and compile the HTTP message body, optionally encoding or decoding its parts
+	 * according to content type.
 	 *
 	 * @param mixed $data
 	 * @param array $options
-	 *        - `'buffer'`: split the body string
+	 *        - `'buffer'` _integer_: split the body string
+	 *        - `'encode'` _boolean_: encode the body based on the content type
+	 *        - `'decode'` _boolean_: decode the body based on the content type
 	 * @return array
 	 */
 	public function body($data = null, $options = array()) {
@@ -201,7 +217,7 @@ class Message extends \lithium\net\Message {
 	}
 
 	/**
-	 * Encodes the body based on the type
+	 * Encode the body based on the content type
 	 *
 	 * @see lithium\net\http\Message::type()
 	 * @param mixed $body
@@ -217,18 +233,19 @@ class Message extends \lithium\net\Message {
 	}
 
 	/**
-	 * Decodes the body based on the type
+	 * Decode the body based on the content type
 	 *
+	 * @see lithium\net\http\Message::type()
 	 * @param string $body
 	 * @return mixed
 	 */
 	protected function _decode($body) {
 		$media = $this->_classes['media'];
 
-		if (!$type = $media::type($this->_type)) {
-			return $body;
+		if ($type = $media::type($this->_type)) {
+			return $media::decode($this->_type, $body) ?: $body;
 		}
-		return $media::decode($this->_type, $body) ?: $body;
+		return $body;
 	}
 }
 

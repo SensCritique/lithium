@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright	 Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright	 Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license	   http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -58,8 +58,7 @@ class CacheTest extends \lithium\test\Unit {
 	 */
 	public function testConfiguration() {
 		$loggers = Logger::config();
-		$result = isset($loggers['cachelog']);
-		$this->assertTrue($result);
+		$this->assertArrayHasKey('cachelog', $loggers);
 	}
 
 	/**
@@ -69,7 +68,7 @@ class CacheTest extends \lithium\test\Unit {
 	public function testWrite() {
 		$message = "CacheLog test message...";
 		$result = Logger::write('info', $message, array('name' => 'cachelog'));
-		$this->assertTrue($result);
+		$this->assertNotEmpty($result);
 		$result = CacheStorage::read('cachelog', 'cachelog_testkey');
 		$this->assertEqual($message, $result);
 	}

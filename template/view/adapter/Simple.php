@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -56,6 +56,12 @@ class Simple extends \lithium\template\view\Renderer {
 		return isset($options['template']) ? $options['template'] : '';
 	}
 
+	/**
+	 * Renders `$data` into an easier to understand, or flat, array.
+	 *
+	 * @param array $data Data to traverse.
+	 * @return array
+	 */
 	protected function _toString($data) {
 		foreach ($data as $key => $val) {
 			switch (true) {

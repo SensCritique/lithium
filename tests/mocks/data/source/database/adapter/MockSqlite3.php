@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -12,6 +12,10 @@ class MockSqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 
 	public function get($var) {
 		return $this->{$var};
+	}
+
+	protected function _execute($sql) {
+		return $sql;
 	}
 }
 

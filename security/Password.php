@@ -2,7 +2,7 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
@@ -145,9 +145,9 @@ class Password {
 	 */
 	public static function salt($type = null, $count = null) {
 		switch (true) {
-			case CRYPT_BLOWFISH == 1 && (!$type || $type === 'bf'):
+			case CRYPT_BLOWFISH === 1 && (!$type || $type === 'bf'):
 				return static::_genSaltBf($count);
-			case CRYPT_EXT_DES == 1 && (!$type || $type === 'xdes'):
+			case CRYPT_EXT_DES === 1 && (!$type || $type === 'xdes'):
 				return static::_genSaltXDES($count);
 			default:
 				return static::_genSaltMD5();
