@@ -1491,11 +1491,9 @@ abstract class Database extends \lithium\data\Source {
 			$constraints = (array) $constraints;
 		}
 
-		$type = $rel->mode();
+		$mode = $rel->mode();
 
-		// $context->joins($toAlias, compact('constraints', 'model', 'type') + array(
-		// 	'type' => 'LEFT',
-		$context->joins($toAlias, compact('constraints', 'model') + array(
+		$context->joins($toAlias, compact('constraints', 'model', 'mode') + array(
 			'mode' => 'LEFT',
 			'alias' => $toAlias
 		));
