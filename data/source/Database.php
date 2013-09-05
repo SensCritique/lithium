@@ -584,35 +584,35 @@ abstract class Database extends \lithium\data\Source {
 	 */
 	protected function &_queryExport($query) {
 		$data = $query->export($this);
-		if ($query->limit() && ($model = $query->model())) {
-			foreach ($query->relationships() as $relation) {
-				if ($relation['type'] === 'hasMany') {
-					$name = $model::meta('name');
-					$key = $model::key();
-					$fields = $data['fields'];
-					$fieldname = $this->name("{$name}.{$key}");
-					$data['fields'] = "DISTINCT({$fieldname}) AS _ID_";
-					$sql = $this->renderCommand('read', $data);
-					$result = $this->_execute($sql);
+		// if ($query->limit() && ($model = $query->model())) {
+		// 	foreach ($query->relationships() as $relation) {
+		// 		if ($relation['type'] === 'hasMany') {
+		// 			$name = $model::meta('name');
+		// 			$key = $model::key();
+		// 			$fields = $data['fields'];
+		// 			$fieldname = $this->name("{$name}.{$key}");
+		// 			$data['fields'] = "DISTINCT({$fieldname}) AS _ID_";
+		// 			$sql = $this->renderCommand('read', $data);
+		// 			$result = $this->_execute($sql);
 
-					$ids = array();
-					while ($row = $result->next()) {
-						$ids[] = $row[0];
-					}
+		// 			$ids = array();
+		// 			while ($row = $result->next()) {
+		// 				$ids[] = $row[0];
+		// 			}
 
-					if (!$ids) {
-						$return = null;
-						return $return;
-					}
-					$data['fields'] = $fields;
-					$data['limit'] = '';
-					$data['conditions'] = $this->conditions(array(
-						"{$name}.{$key}" => $ids
-					), $query);
-					return $data;
-				}
-			}
-		}
+		// 			if (!$ids) {
+		// 				$return = null;
+		// 				return $return;
+		// 			}
+		// 			$data['fields'] = $fields;
+		// 			$data['limit'] = '';
+		// 			$data['conditions'] = $this->conditions(array(
+		// 				"{$name}.{$key}" => $ids
+		// 			), $query);
+		// 			return $data;
+		// 		}
+		// 	}
+		// }
 		return $data;
 	}
 
@@ -1491,7 +1491,9 @@ abstract class Database extends \lithium\data\Source {
 			$constraints = (array) $constraints;
 		}
 
-		$context->joins($toAlias, compact('constraints', 'model') + array(
+		$mode = $rel->mode();
+
+		$context->joins($toAlias, compact('constraints', 'model', 'mode') + array(
 			'mode' => 'LEFT',
 			'alias' => $toAlias
 		));
