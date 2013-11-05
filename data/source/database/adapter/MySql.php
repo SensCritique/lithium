@@ -33,7 +33,7 @@ class MySql extends \lithium\data\source\Database {
 		'integer' => array('use' => 'int', 'length' => 11, 'formatter' => 'intval'),
 		'float' => array('use' => 'float', 'formatter' => 'floatval'),
 		'datetime' => array('use' => 'datetime', 'format' => 'Y-m-d H:i:s'),
-		'timestamp' => array('use' => 'timestamp', 'format' => 'Y-m-d H:i:s'),
+		'timestamp' => array('use' => 'timestamp', 'format' => 'Y-m-d H:i:s', 'formatter' => 'timestamp'),
 		'time' => array('use' => 'time', 'format' => 'H:i:s', 'formatter' => 'date'),
 		'date' => array('use' => 'date', 'format' => 'Y-m-d', 'formatter' => 'date'),
 		'binary' => array('use' => 'blob'),

@@ -449,10 +449,28 @@ abstract class Database extends \lithium\data\Source {
 	protected function _formatters() {
 		$self = $this;
 
-		$datetime = $timestamp = $date = $time = function($format, $value) use ($self) {
+		$datetime = $date = $time = function($format, $value) use ($self) {
 			if ($format && (($time = strtotime($value)) !== false)) {
 				$value = date($format, $time);
 			}
+			return $self->connection->quote($value);
+		};
+
+		$timestamp = function($format, $value) use ($self) {
+			if ($format) {
+				// Try to read value
+				$time = false;
+				if (is_numeric($value)) {
+					$time = $value;
+				} else {
+					$time = strtotime($value);
+				}
+
+				if ($time !== false) {
+					$value = date($format, $time);
+				}
+			}
+
 			return $self->connection->quote($value);
 		};
 
