@@ -110,7 +110,8 @@ class Relationship extends \lithium\core\Object {
 			'fields' => true,
 			'fieldName' => null,
 			'constraints' => array(),
-			'mode' => 'LEFT'
+			'mode' => 'LEFT',
+			'useIndex' => null,
 		);
 		$config += $defaults;
 		if (!$config['type'] || !$config['fieldName']) {

@@ -190,7 +190,7 @@ class Query extends \lithium\core\Object {
 			'schema' => null,
 			'comment' => null,
 			'map' => array(),
-			'relationships' => array()
+			'relationships' => array(),
 		);
 		parent::__construct($config + $defaults);
 	}

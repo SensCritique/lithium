@@ -54,7 +54,7 @@ abstract class Database extends \lithium\data\Source {
 		'create' => "INSERT INTO {:source} ({:fields}) VALUES ({:values});{:comment}",
 		'update' => "UPDATE {:source} SET {:fields} {:conditions};{:comment}",
 		'delete' => "DELETE {:flags} FROM {:source} {:conditions};{:comment}",
-		'join' => "{:mode} JOIN {:source} {:alias} {:constraints}",
+		'join' => "{:mode} JOIN {:source} {:alias} {:useIndex} {:constraints}",
 		'schema' => "CREATE TABLE {:source} (\n{:columns}{:constraints}){:table};{:comment}",
 		'drop'   => "DROP TABLE {:exists}{:source};"
 	);
@@ -1170,7 +1170,7 @@ abstract class Database extends \lithium\data\Source {
 				$result .= ' ';
 			}
 			$join = is_array($join) ? $this->_instance('query', $join) : $join;
-			$options['keys'] = array('mode', 'source', 'alias', 'constraints');
+			$options['keys'] = array('mode', 'source', 'alias', 'constraints', 'useIndex');
 			$result .= $this->renderCommand('join', $join->export($this, $options));
 		}
 		return $result;
@@ -1510,8 +1510,9 @@ abstract class Database extends \lithium\data\Source {
 		}
 
 		$mode = $rel->mode();
+		$useIndex = $rel->useIndex();
 
-		$context->joins($toAlias, compact('constraints', 'model', 'mode') + array(
+		$context->joins($toAlias, compact('constraints', 'model', 'mode', 'useIndex') + array(
 			'mode' => 'LEFT',
 			'alias' => $toAlias
 		));
