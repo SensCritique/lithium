@@ -9,7 +9,7 @@
 namespace lithium\core;
 
 use RuntimeException;
-use lithium\util\String;
+use lithium\util\StringUtil;
 use lithium\util\collection\Filters;
 use lithium\core\ConfigException;
 use lithium\core\ClassNotFoundException;
@@ -865,7 +865,7 @@ class Libraries {
 
 			foreach (static::_searchPaths($paths, $library, $params) as $tpl) {
 				$params['library'] = rtrim($config['prefix'], '\\');
-				$class = str_replace('\\*', '', String::insert($tpl, $params));
+				$class = str_replace('\\*', '', StringUtil::insert($tpl, $params));
 
 				if (file_exists($file = Libraries::path($class, $options))) {
 					return ($options['type'] === 'file') ? $file : $class;
@@ -922,7 +922,7 @@ class Libraries {
 			$params['library'] = $config['path'];
 
 			foreach (static::_searchPaths($paths, $library, $params) as $tpl) {
-				$options['path'] = str_replace('\\', '/', String::insert($tpl, $params, $flags));
+				$options['path'] = str_replace('\\', '/', StringUtil::insert($tpl, $params, $flags));
 				$options['path'] = str_replace('*/', '', $options['path']);
 				$classes = array_merge($classes, static::_search($config, $options));
 			}
@@ -945,7 +945,7 @@ class Libraries {
 		$params += array('app' => LITHIUM_APP_PATH, 'root' => LITHIUM_LIBRARY_PATH);
 
 		foreach (static::$_paths[$type] as $path) {
-			if (is_dir($path = str_replace('\\', '/', String::insert($path, $params)))) {
+			if (is_dir($path = str_replace('\\', '/', StringUtil::insert($path, $params)))) {
 				return $path;
 			}
 		}

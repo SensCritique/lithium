@@ -136,7 +136,7 @@ use lithium\core\ClassNotFoundException;
  *
  * @see lithium\net\http\Request::$data
  * @see lithium\data\Model::find()
- * @see lithium\util\String::hash()
+ * @see lithium\util\StringUtil::hash()
  */
 class Form extends \lithium\core\Object {
 

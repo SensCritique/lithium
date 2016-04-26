@@ -15,7 +15,7 @@ class MbstringTest extends \lithium\test\Unit {
 	public $adapter;
 
 	public function skip() {
-		$this->skipIf(!Mbstring::enabled(), 'The `Mbstring` adapter is not enabled.');
+		$this->skipIf(!MbStringUtil::enabled(), 'The `Mbstring` adapter is not enabled.');
 	}
 
 	public function setUp() {
