@@ -1050,7 +1050,6 @@ class Model extends \lithium\core\StaticObject {
 	 */
 	public static function schema($field = null) {
 		$self = static::_object();
-
 		if (!is_object($self->_schema)) {
 			$self->_schema = static::connection()->describe(
 				$self::meta('source'), $self->_schema, $self->_meta
@@ -1068,6 +1067,7 @@ class Model extends \lithium\core\StaticObject {
 		if ($field === false) {
 			return $self->_schema->reset();
 		}
+
 		if (is_array($field)) {
 			return $self->_schema->append($field);
 		}

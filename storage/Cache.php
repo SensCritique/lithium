@@ -179,7 +179,7 @@ class Cache extends \lithium\core\Adaptable {
 		}
 		$params = compact('keys', 'expiry');
 
-		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) use ($adapter) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function() use ($adapter, $params) {
 			return $adapter->write($params['keys'], $params['expiry']);
 		});
 	}
@@ -241,7 +241,7 @@ class Cache extends \lithium\core\Adaptable {
 		}
 		$params = compact('keys');
 
-		$results = Filters::run(get_called_class(), __FUNCTION__, $params, function($params) use ($adapter) {
+		$results = Filters::run(get_called_class(), __FUNCTION__, $params, function() use ($adapter, $params) {
 			return $adapter->read($params['keys']);
 		});
 
