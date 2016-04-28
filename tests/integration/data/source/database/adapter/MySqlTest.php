@@ -169,6 +169,9 @@ class MySqlTest extends \lithium\tests\integration\data\Base {
 
 		$result = $this->_db->value((object) "'2012-00-00'", array('type' => 'date'));
 		$this->assertIdentical("'2012-00-00'", $result);
+
+		$result = $this->_db->value('1388829443', array('type' => 'timestamp'));
+		$this->assertIdentical("'2014-01-04 10:57:23'", $result);
 	}
 
 	public function testNameQuoting() {

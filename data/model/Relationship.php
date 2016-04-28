@@ -107,16 +107,18 @@ class Relationship extends \lithium\core\Object {
 	 */
 	public function __construct(array $config = array()) {
 		$defaults = array(
-			'name'        => null,
-			'key'         => array(),
-			'type'        => null,
-			'to'          => null,
-			'from'        => null,
-			'link'        => static::LINK_KEY,
-			'fields'      => true,
-			'fieldName'   => null,
+			'name' => null,
+			'key' => array(),
+			'type' => null,
+			'to'   => null,
+			'from' => null,
+			'link' => static::LINK_KEY,
+			'fields' => true,
+			'fieldName' => null,
 			'constraints' => array(),
-			'strategy'    => null
+			'mode' => 'LEFT',
+			'strategy'    => null			
+			'useIndex' => null,
 		);
 		$config += $defaults;
 

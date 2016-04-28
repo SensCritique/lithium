@@ -57,7 +57,7 @@ abstract class Database extends \lithium\data\Source {
 		'create' => "INSERT INTO {:source} ({:fields}) VALUES ({:values});{:comment}",
 		'update' => "UPDATE {:source} SET {:fields} {:conditions};{:comment}",
 		'delete' => "DELETE {:flags} FROM {:source} {:conditions};{:comment}",
-		'join' => "{:mode} JOIN {:source} {:alias} {:constraints}",
+		'join' => "{:mode} JOIN {:source} {:alias} {:useIndex} {:constraints}",
 		'schema' => "CREATE TABLE {:source} (\n{:columns}{:constraints}){:table};{:comment}",
 		'drop'   => "DROP TABLE {:exists}{:source};"
 	);
@@ -494,13 +494,33 @@ abstract class Database extends \lithium\data\Source {
 	 * @return array of column types to Closure formatter
 	 */
 	protected function _formatters() {
-		$datetime = $timestamp = $date = $time = function($format, $value) {
+		$self = $this;
+
+		$datetime = $date = $time = function($format, $value) use ($self) {
 			if ($format && (($time = strtotime($value)) !== false)) {
 				$value = date($format, $time);
 			} else {
 				return false;
 			}
 			return $this->connection->quote($value);
+		};
+
+		$timestamp = function($format, $value) use ($self) {
+			if ($format) {
+				// Try to read value
+				$time = false;
+				if (is_numeric($value)) {
+					$time = $value;
+				} else {
+					$time = strtotime($value);
+				}
+
+				if ($time !== false) {
+					$value = date($format, $time);
+				}
+			}
+
+			return $self->connection->quote($value);
 		};
 
 		return compact('datetime', 'timestamp', 'date', 'time') + array(
@@ -635,45 +655,35 @@ abstract class Database extends \lithium\data\Source {
 	 */
 	protected function &_queryExport($query) {
 		$data = $query->export($this);
+		// if ($query->limit() && ($model = $query->model())) {
+		// 	foreach ($query->relationships() as $relation) {
+		// 		if ($relation['type'] === 'hasMany') {
+		// 			$name = $model::meta('name');
+		// 			$key = $model::key();
+		// 			$fields = $data['fields'];
+		// 			$fieldname = $this->name("{$name}.{$key}");
+		// 			$data['fields'] = "DISTINCT({$fieldname}) AS _ID_";
+		// 			$sql = $this->renderCommand('read', $data);
+		// 			$result = $this->_execute($sql);
 
-		if (!$query->limit() || !($model = $query->model())) {
-			return $data;
-		}
-		foreach ($query->relationships() as $relation) {
-			if ($relation['type'] !== 'hasMany') {
-				continue;
-			}
-			$pk = $this->name($model::meta('name') . '.' . $model::key());
+		// 			$ids = array();
+		// 			while ($row = $result->next()) {
+		// 				$ids[] = $row[0];
+		// 			}
 
-			$result = $this->_execute($this->renderCommand('read', array(
-				'fields' => "DISTINCT({$pk}) AS _ID_") + $data
-			));
-			$ids = array();
-
-			foreach ($result as $row) {
-				$ids[] = $row[0];
-			}
-			if (!$ids) {
-				$data = null;
-				break;
-			}
-
-			$conditions = array();
-			$relations = array_keys($query->relationships());
-			$pattern = '/^(' . implode('|', $relations) . ')\./';
-
-			foreach ($query->conditions() as $key => $value) {
-				if (preg_match($pattern, $key)) {
-					$conditions[$key] = $value;
-				}
-			}
-			$data['conditions'] = $this->conditions(
-				array($pk => $ids) + $conditions, $query
-			);
-
-			$data['limit'] = '';
-			break;
-		}
+		// 			if (!$ids) {
+		// 				$return = null;
+		// 				return $return;
+		// 			}
+		// 			$data['fields'] = $fields;
+		// 			$data['limit'] = '';
+		// 			$data['conditions'] = $this->conditions(array(
+		// 				"{$name}.{$key}" => $ids
+		// 			), $query);
+		// 			return $data;
+		// 		}
+		// 	}
+		// }
 		return $data;
 	}
 
@@ -1298,7 +1308,7 @@ abstract class Database extends \lithium\data\Source {
 				$result .= ' ';
 			}
 			$join = is_array($join) ? $this->_instance('query', $join) : $join;
-			$options['keys'] = array('mode', 'source', 'alias', 'constraints');
+			$options['keys'] = array('mode', 'source', 'alias', 'constraints', 'useIndex');
 			$result .= $this->renderCommand('join', $join->export($this, $options));
 		}
 		return $result;
@@ -1618,7 +1628,10 @@ abstract class Database extends \lithium\data\Source {
 			$constraints = (array) $constraints;
 		}
 
-		$context->joins($toAlias, compact('constraints', 'model') + array(
+		$mode = $rel->mode();
+		$useIndex = $rel->useIndex();
+
+		$context->joins($toAlias, compact('constraints', 'model', 'mode', 'useIndex') + array(
 			'mode' => 'LEFT',
 			'alias' => $toAlias
 		));
