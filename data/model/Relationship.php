@@ -117,8 +117,8 @@ class Relationship extends \lithium\core\Object {
 			'fieldName' => null,
 			'constraints' => array(),
 			'mode' => 'LEFT',
-			'strategy'    => null			
-			'useIndex' => null,
+			'strategy'    => null,	
+			'useIndex' => null
 		);
 		$config += $defaults;
 
