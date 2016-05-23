@@ -133,14 +133,14 @@ class RecordSet extends \lithium\data\Collection {
 	protected function _mapRecord($row) {
 		$main = array_intersect_key($row, $this->_keyIndex);
 
-		if ($main) {
-			if (in_array($main, $this->_seen)) {
-				$message  = 'Associated records hydrated out of order: ';
-				$message .= var_export($this->_seen, true);
-				throw new RuntimeException($message);
-			}
-			$this->_seen[] = $main;
-		}
+		// if ($main) {
+		// 	if (in_array($main, $this->_seen)) {
+		// 		$message  = 'Associated records hydrated out of order: ';
+		// 		$message .= var_export($this->_seen, true);
+		// 		throw new RuntimeException($message);
+		// 	}
+		// 	$this->_seen[] = $main;
+		// }
 
 		$i = 0;
 		$record = array();
