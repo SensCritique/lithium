@@ -852,7 +852,7 @@ abstract class Database extends \lithium\data\Source {
 		if (!$resource) {
 			return $result;
 		}
-		$count = $resource->resource()->columnCount();
+		$count = empty($resource->resource()) ? 0 : $resource->resource()->columnCount();
 
 		for ($i = 0; $i < $count; $i++) {
 			$meta = $resource->resource()->getColumnMeta($i);
