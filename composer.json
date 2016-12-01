@@ -20,5 +20,10 @@
     "require-dev": {
         "unionofrad/li3_fixtures": "1.0.*@RC"
     },
+    "extra": {
+        "installer-paths": {
+        "libraries": ["unionofrad/lithium"]
+        }
+    },
     "bin" : ["console/li3"]
 }
